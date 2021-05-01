@@ -10,25 +10,57 @@ import './style/main.scss'
 let canvas = document.getElementById('canvas')
 let ctx = canvas.getContext('2d')
 
-// Origin
-const O = {
-    x: canvas.width / 2,
-    y: canvas.height / 2
+class Vector {
+    constructor(x, y) {
+        this.x = x
+        this.y = y
+    }
+
+    add(other) {
+        return new Vector(this.x + other.x, this.y + other.y)
+    }
+
+    scale(scalar) {
+        return new Vector(this.x * scalar, this.y * scalar)
+    }
+
+    dot(other) {
+        return this.x*other.x + this.y*other.y
+    }
+
+    magnitude() {
+        return Math.sqrt(this.dot(this))
+    }
+
+    unit() {
+        return this.scale(1/this.magnitude())
+    }
 }
+Vector.ZERO = new Vector(0, 0)
 
-const centered = r => ({ 
-    x: r.x + O.x, 
-    y: O.y - r.y 
-})
-
-const distance = (a, b) => Math.sqrt(
-      (b.x - a.x)*(b.x - a.x)
-    + (b.y - a.y)*(b.y - a.y)
-)
+// Origin
+const O = new Vector(canvas.width, canvas.height).scale(1/2)
+const centered = r => new Vector(O.x + r.x, O.y - r.y)
+const diff = (a, b) => a.scale(-1).add(b)
 
 function update(circle) {
     circle.pos.x += circle.vel.x
     circle.pos.y += circle.vel.y
+}
+
+function drawLine(p0, p1, color) {
+    let t0 = centered(p0)
+    let t1 = centered(p1)
+    ctx.strokeStyle = color
+    ctx.beginPath()
+    ctx.moveTo(t0.x, t0.y)
+    ctx.lineTo(t1.x, t1.y)
+    ctx.stroke()
+}
+
+function drawRay(p, d, l, color) {
+    let s = p.add(d.scale(l))
+    drawLine(p, s, color)
 }
 
 function drawCircle(circle) {
@@ -39,36 +71,26 @@ function drawCircle(circle) {
     ctx.stroke()
 }
 
-const circle0 = { 
-    rad: 30,
-    pos: { x: -200, y: 0 }, 
-    vel: { x: 3, y: 0 } 
-}
-
-const circle1 = {
-    rad: 30,
-    pos: { x: 200, y: 0 }, 
-    vel: { x: -2, y: 0.5 }
-}
-
-function circleCollisionDetection(circle0, circle1) {
-    let d = distance(circle0.pos, circle1.pos)
+function circleCollision(circle0, circle1) {
+    // Difference vector
+    let d = diff(circle0.pos, circle1.pos)
 
     // If distance is greater than both radii
-    if (d < circle0.rad + circle1.rad) {
-        // Draw line between
-        let p0 = centered(circle0.pos)
-        let p1 = centered(circle1.pos)
-        ctx.beginPath()
-        ctx.strokeStyle = '#ff0000'
-        ctx.moveTo(p0.x, p0.y)
-        ctx.lineTo(p1.x, p1.y)
-        ctx.stroke()
+    if (d.magnitude() < circle0.rad + circle1.rad) {
+        // First find the collision normal
+        let n = d.unit()
+        drawRay(circle0.pos, n, 0.60*circle0.rad, '#0000ff')
 
-        // Translate to outside
+        // Next find component of velocity parallel to normal (u)
+        // and component of velocity perpendicular to normal (v)
+        let r = circle0.vel.dot(n) / n.magnitude()
+        let u = n.unit().scale(r)
+        let v = circle0.vel.add(u.scale(-1))
+        drawRay(circle0.pos, u.unit(), 0.40*circle0.rad, '#00ff00')
+        drawRay(circle0.pos, v.unit(), 0.40*circle0.rad, '#ff0000')
 
-        // Reflect velocity across
-        // collision normal
+        // New velocity is the negative parallel + perpendicular
+        circle0.vel = u.scale(-1).add(v)
     }
 
 }
@@ -85,6 +107,18 @@ function boundaryCollision(circle) {
     }
 }
 
+const circle0 = { 
+    rad: 20,
+    pos: new Vector(-200, 0), 
+    vel: new Vector(3, 0)
+}
+
+const circle1 = {
+    rad: 20,
+    pos: new Vector(200, 0), 
+    vel: new Vector(-2, 0.5)
+}
+
 function animate() {
     // Render step
     ctx.clearRect(0, 0, canvas.width, canvas.height)
@@ -98,7 +132,8 @@ function animate() {
     // Collision detection
     boundaryCollision(circle0)
     boundaryCollision(circle1)
-    circleCollisionDetection(circle0, circle1)
+    circleCollision(circle0, circle1)
+    circleCollision(circle1, circle0)
 
     // Next animation frame
     requestAnimationFrame(animate)
