@@ -6,10 +6,6 @@
  */
 import './style/main.scss'
 
-// Get canvas and drawcontext
-let canvas = document.getElementById('canvas')
-let ctx = canvas.getContext('2d')
-
 class Vector {
     constructor(x, y) {
         this.x = x
@@ -22,6 +18,10 @@ class Vector {
 
     scale(scalar) {
         return new Vector(this.x * scalar, this.y * scalar)
+    }
+
+    sub(other) {
+        return other.scale(-1).add(this)
     }
 
     dot(other) {
@@ -38,15 +38,18 @@ class Vector {
 }
 Vector.ZERO = new Vector(0, 0)
 
+const random = (m, x) => m + Math.random()*(x - m)
+const randomVector = (xm, xx, ym, yx) =>
+    new Vector(random(xm, xx), random(ym, yx))
+
+
+// Get canvas and drawcontext
+let canvas = document.getElementById('canvas')
+let ctx = canvas.getContext('2d')
+
 // Origin
 const O = new Vector(canvas.width, canvas.height).scale(1/2)
 const centered = r => new Vector(O.x + r.x, O.y - r.y)
-const diff = (a, b) => a.scale(-1).add(b)
-
-function update(circle) {
-    circle.pos.x += circle.vel.x
-    circle.pos.y += circle.vel.y
-}
 
 function drawLine(p0, p1, color) {
     let t0 = centered(p0)
@@ -63,77 +66,91 @@ function drawRay(p, d, l, color) {
     drawLine(p, s, color)
 }
 
-function drawCircle(circle) {
-    let transformed = centered(circle.pos)
+function drawCircle(pos, rad) {
+    let transformed = centered(pos)
     ctx.strokeStyle = '#000000'
     ctx.beginPath()
-    ctx.arc(transformed.x, transformed.y, circle.rad, 0, 2*Math.PI)
+    ctx.arc(transformed.x, transformed.y, rad, 0, 2*Math.PI)
     ctx.stroke()
 }
 
-function circleCollision(circle0, circle1) {
+class Ball {
+    constructor(pos, vel, rad=20) {
+        this.pos = pos
+        this.vel = vel
+        this.rad = rad
+    }
+
+    draw() {
+        drawCircle(this.pos, this.rad)
+    }
+
+    update() {
+        this.pos = this.pos.add(this.vel)
+    }
+}
+
+function boundaryCollision(ball) {
+    if (Math.abs(ball.pos.y) > canvas.height/2 - ball.rad) { ball.vel.y *= -1 }
+    if (Math.abs(ball.pos.x) > canvas.width/2 - ball.rad) { ball.vel.x *= -1 }
+}
+
+function ballCollision(a, b) {
     // Difference vector
-    let d = diff(circle0.pos, circle1.pos)
+    let d = b.pos.sub(a.pos)
 
     // If distance is greater than both radii
-    if (d.magnitude() < circle0.rad + circle1.rad) {
+    if (d.magnitude() < a.rad + b.rad) {
         // First find the collision normal
         let n = d.unit()
-        drawRay(circle0.pos, n, 0.60*circle0.rad, '#0000ff')
 
-        // Next find component of velocity parallel to normal (u)
+        // Find component of velocity parallel to normal (u)
         // and component of velocity perpendicular to normal (v)
-        let r = circle0.vel.dot(n) / n.magnitude()
-        let u = n.unit().scale(r)
-        let v = circle0.vel.add(u.scale(-1))
-        drawRay(circle0.pos, u.unit(), 0.40*circle0.rad, '#00ff00')
-        drawRay(circle0.pos, v.unit(), 0.40*circle0.rad, '#ff0000')
+        let u = n.scale(a.vel.dot(n))
+        let v = a.vel.add(u.scale(-1))
 
         // New velocity is the negative parallel + perpendicular
-        circle0.vel = u.scale(-1).add(v)
-    }
-
-}
-
-function boundaryCollision(circle) {
-    // Check vertical bounds
-    if (Math.abs(circle.pos.y) > canvas.height/2 - circle.rad) {
-        circle.vel.y *= -1
-    }
-
-    // Check horizontal bounds
-    if (Math.abs(circle.pos.x) > canvas.width / 2 - circle.rad) {
-        circle.vel.x *= -1
+        a.vel = u.scale(-1).add(v)
     }
 }
 
-const circle0 = { 
-    rad: 20,
-    pos: new Vector(-200, 0), 
-    vel: new Vector(3, 0)
-}
-
-const circle1 = {
-    rad: 20,
-    pos: new Vector(200, 0), 
-    vel: new Vector(-2, 0.5)
+let balls = []
+for (let index = 0; index < 6; index++) {
+    balls.push(
+        new Ball(
+            randomVector(-200, 200, -200, 200),
+            randomVector(-5, 5, -5, 5)
+        )
+    )
 }
 
 function animate() {
     // Render step
     ctx.clearRect(0, 0, canvas.width, canvas.height)
-    drawCircle(circle0)
-    drawCircle(circle1)
+    for (const ball of balls) {
+        ball.draw()
+    }
 
     // Update step
-    update(circle0)
-    update(circle1)
+    for (let ball of balls) {
+        ball.update()
+    }
 
-    // Collision detection
-    boundaryCollision(circle0)
-    boundaryCollision(circle1)
-    circleCollision(circle0, circle1)
-    circleCollision(circle1, circle0)
+    // Boundary collision detection
+    for (let ball of balls) {
+        boundaryCollision(ball)
+    }
+
+    // Circle collision detection
+    for (let i in balls) {
+        let tball = balls[i]
+        for (let j in balls) {
+            if (i !== j) {
+                let sball = balls[j]
+                ballCollision(tball, sball)
+            }
+        }
+    }
 
     // Next animation frame
     requestAnimationFrame(animate)
