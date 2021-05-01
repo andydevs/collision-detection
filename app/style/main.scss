@@ -1,8 +1,8 @@
 /**
- * Custom stack template stuff
+ * Collision detection
  * 
  * Author:  Anshul Kharbanda
- * Created: [Creation Date]
+ * Created: 4 - 30 - 2021
  */
 * {
     font-family: 'Segoe UI', 
@@ -10,23 +10,12 @@
         Verdana, sans-serif;
 }
 
-.one {
-    font-size: 40pt;
+#app {
+    text-align: center;
 }
 
-.two {
-    border: 1px solid;
-    color: blue;
-    
-    .three {
-        color: red;
-    }
-}
-
-.car {
-    max-width: 100%;
-}
-
-.form-group > * {
-    display: block;
-}
+#canvas {
+    width: 100%;
+    max-width: 1280px;
+    border: 1px solid #ccc;
+} 
