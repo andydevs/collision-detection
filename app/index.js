@@ -8,7 +8,7 @@ import './style/main.scss'
 import Vector from './vector'
 
 const PAUSE_ON_COLLISION = false
-const DEBUG_COLLISIONS = true
+const DEBUG_COLLISIONS = false
 
 // Get canvas and drawcontext
 let canvas = document.getElementById('canvas')
@@ -124,13 +124,13 @@ function ballCollision(a, b) {
 }
 
 // Generate a number of balls
-let number = 6
-let radius = 40
+let number = 280
+let radius = 10
 let balls = []
 while (number > 0) {
     let ball = new Ball(
         Vector.random(-200, 200, -200, 200),
-        Vector.random(-5, 5, -5, 5),
+        Vector.random(-10, 10, -10, 10),
         radius
     )
 
