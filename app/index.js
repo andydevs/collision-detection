@@ -36,15 +36,59 @@ class Ball {
 function boundaryCollision(screen, ball) {
     let collided = false
 
-    // Reflect againt vertical bounds
-    if (Math.abs(ball.pos.y) > screen.canvas.height/2 - ball.rad) {
+    // Upper bound
+    if (ball.pos.y + ball.rad > screen.canvas.height/2) {
+        // Translate down
+        let distance = screen.canvas.height/2 - ball.pos.y
+        if (distance < 0) { ball.pos.y -= ball.rad }
+        ball.pos.y -= Math.abs(distance)
+
+        // Flip velocity
         ball.vel.y *= -1
+
+        // Update collision
         collided ||= true
     }
 
-    // Reflect against horizontal bounds
-    if (Math.abs(ball.pos.x) > screen.canvas.width/2 - ball.rad) {
+    // Lower bound
+    if (ball.pos.y - ball.rad < -screen.canvas.height/2) {
+        // Translate up
+        let distance = -screen.canvas.height/2 - ball.pos.y
+        if (distance > 0) { ball.pos.y += ball.rad }
+        ball.pos.y += Math.abs(distance)
+
+        // Flip velocity
+        ball.vel.y *= -1
+
+        // Update collision
+        collided ||= true
+    }
+
+    // Right bound
+    if (ball.pos.x + ball.rad > screen.canvas.width/2) {
+        // Translate left
+        let distance = screen.canvas.width/2 - ball.pos.x
+        if (distance < 0) { ball.pos.x -= ball.rad }
+        ball.pos.x -= Math.abs(distance)
+
+        // Flip velocity
         ball.vel.x *= -1
+
+        // Update collision
+        collided ||= true
+    }
+
+    // Left bound
+    if (ball.pos.x - ball.rad < -screen.canvas.width/2) {
+        // Translate right
+        let distance = -screen.canvas.width/2 - ball.pos.x
+        if (distance > 0) { ball.pos.x += ball.rad }
+        ball.pos.x += Math.abs(distance)
+        
+        // Flip velocity
+        ball.vel.x *= -1
+
+        // Update collision
         collided ||= true
     }
 
@@ -115,7 +159,7 @@ function slowRelease() {
     if (number > 0) {
         // Create a ball
         let ball = new Ball(
-            Vector.random(-200, 200, -200, 200),
+            Vector.random(-300, 300, -300, 300),
             Vector.random(-10, 10, -10, 10),
             random(10, 40)
         )
