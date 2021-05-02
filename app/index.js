@@ -38,10 +38,9 @@ function boundaryCollision(screen, ball) {
 
     // Upper bound
     if (ball.pos.y + ball.rad > screen.canvas.height/2) {
-        // Translate down
-        let distance = screen.canvas.height/2 - ball.pos.y
-        if (distance < 0) { ball.pos.y -= ball.rad }
-        ball.pos.y -= Math.abs(distance)
+        // Translate down to correct
+        let distance = (ball.pos.y + ball.rad) - screen.canvas.height/2
+        ball.pos.y -= distance
 
         // Flip velocity
         ball.vel.y *= -1
@@ -52,10 +51,9 @@ function boundaryCollision(screen, ball) {
 
     // Lower bound
     if (ball.pos.y - ball.rad < -screen.canvas.height/2) {
-        // Translate up
-        let distance = -screen.canvas.height/2 - ball.pos.y
-        if (distance > 0) { ball.pos.y += ball.rad }
-        ball.pos.y += Math.abs(distance)
+        // Translate up to correct
+        let distance = (ball.pos.y - ball.rad) + screen.canvas.height/2
+        ball.pos.y -= distance
 
         // Flip velocity
         ball.vel.y *= -1
@@ -66,10 +64,9 @@ function boundaryCollision(screen, ball) {
 
     // Right bound
     if (ball.pos.x + ball.rad > screen.canvas.width/2) {
-        // Translate left
-        let distance = screen.canvas.width/2 - ball.pos.x
-        if (distance < 0) { ball.pos.x -= ball.rad }
-        ball.pos.x -= Math.abs(distance)
+        // Translate left to correct
+        let distance = (ball.pos.x + ball.rad) - screen.canvas.width/2
+        ball.pos.x -= distance
 
         // Flip velocity
         ball.vel.x *= -1
@@ -81,9 +78,8 @@ function boundaryCollision(screen, ball) {
     // Left bound
     if (ball.pos.x - ball.rad < -screen.canvas.width/2) {
         // Translate right
-        let distance = -screen.canvas.width/2 - ball.pos.x
-        if (distance > 0) { ball.pos.x += ball.rad }
-        ball.pos.x += Math.abs(distance)
+        let distance = (ball.pos.x - ball.rad) + screen.canvas.width/2
+        ball.pos.x -= distance
         
         // Flip velocity
         ball.vel.x *= -1
