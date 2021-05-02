@@ -44,12 +44,11 @@ export default class Screen {
         this.drawLine(p, s, color, width)
     }
 
-    drawCircle(pos, rad, width=1) {
+    drawCircle(pos, rad, color='#000000') {
         let trfp = this.centered(pos)
-        this.ctx.strokeStyle = '#000000'
-        this.ctx.lineWidth = width
+        this.ctx.fillStyle = color
         this.ctx.beginPath()
         this.ctx.arc(trfp.x, trfp.y, rad, 0, 2*Math.PI)
-        this.ctx.stroke()
+        this.ctx.fill()
     }
 }

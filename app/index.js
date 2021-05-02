@@ -25,7 +25,7 @@ class Ball {
     }
 
     draw(screen) {
-        screen.drawCircle(this.pos, this.rad)
+        screen.drawCircle(this.pos, this.rad, '#00aaff')
     }
 
     update() {
@@ -108,28 +108,33 @@ function ballCollision(screen, a, b) {
 // Create a screen
 const screen = new Screen('canvas')
 
-// Generate a number of balls
+// Slowly release balls into the screen
 let number = 20
 let balls = []
-while (number > 0) {
-    // Create a ball
-    let ball = new Ball(
-        Vector.random(-200, 200, -200, 200),
-        Vector.random(-10, 10, -10, 10),
-        random(10, 40)
-    )
+function slowRelease() {
+    if (number > 0) {
+        // Create a ball
+        let ball = new Ball(
+            Vector.random(-200, 200, -200, 200),
+            Vector.random(-10, 10, -10, 10),
+            random(10, 40)
+        )
 
-    // Let's not spawn any balls that are
-    // colliding with other balls!
-    let collided = false
-    for (let other of balls) {
-        collided ||= ballCollision(screen, ball, other)
-    }
-    if (!collided) {
-        balls.push(ball)
-        --number
+        // Let's not spawn any balls that are
+        // colliding with other balls!
+        let collided = false
+        for (let other of balls) {
+            collided ||= ballCollision(screen, ball, other)
+        }
+        if (!collided) {
+            balls.push(ball)
+            --number
+        }
+
+        setTimeout(slowRelease, 1000)
     }
 }
+slowRelease()
 
 // Animation step
 let wait = 0
