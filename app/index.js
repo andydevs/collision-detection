@@ -6,42 +6,11 @@
  */
 import './style/main.scss'
 import Vector, { random } from './vector'
+import Screen from './screen'
 
-const PAUSE_ON_COLLISION = false
-const DEBUG_COLLISIONS = false
-
-// Get canvas and drawcontext
-let canvas = document.getElementById('canvas')
-let ctx = canvas.getContext('2d')
-
-// Origin
-const O = new Vector(canvas.width, canvas.height).scale(1/2)
-const centered = r => new Vector(O.x + r.x, O.y - r.y)
-
-function drawLine(p0, p1, color, width=1) {
-    let t0 = centered(p0)
-    let t1 = centered(p1)
-    ctx.strokeStyle = color
-    ctx.lineWidth = width
-    ctx.beginPath()
-    ctx.moveTo(t0.x, t0.y)
-    ctx.lineTo(t1.x, t1.y)
-    ctx.stroke()
-}
-
-function drawRay(p, d, l, color, width=1) {
-    let s = p.add(d.scale(l))
-    drawLine(p, s, color, width)
-}
-
-function drawCircle(pos, rad, width=1) {
-    let transformed = centered(pos)
-    ctx.strokeStyle = '#000000'
-    ctx.lineWidth = width
-    ctx.beginPath()
-    ctx.arc(transformed.x, transformed.y, rad, 0, 2*Math.PI)
-    ctx.stroke()
-}
+// Parameters
+let PAUSE_ON_COLLISION = false
+let DEBUG_COLLISIONS = false
 
 class Ball {
     constructor(pos, vel, rad=20) {
@@ -50,8 +19,8 @@ class Ball {
         this.rad = rad
     }
 
-    draw() {
-        drawCircle(this.pos, this.rad)
+    draw(screen) {
+        screen.drawCircle(this.pos, this.rad)
     }
 
     update() {
@@ -59,20 +28,20 @@ class Ball {
     }
 }
 
-function boundaryCollision(ball) {
+function boundaryCollision(screen, ball) {
     let collided = false
-    if (Math.abs(ball.pos.y) > canvas.height/2 - ball.rad) {
+    if (Math.abs(ball.pos.y) > screen.canvas.height/2 - ball.rad) {
         ball.vel.y *= -1
         collided ||= true
     }
-    if (Math.abs(ball.pos.x) > canvas.width/2 - ball.rad) {
+    if (Math.abs(ball.pos.x) > screen.canvas.width/2 - ball.rad) {
         ball.vel.x *= -1
         collided ||= true
     }
     return collided
 }
 
-function ballCollision(a, b) {
+function ballCollision(screen, a, b) {
     // Difference vector
     let d = b.pos.sub(a.pos)
 
@@ -98,17 +67,17 @@ function ballCollision(a, b) {
         // Debug draw ray
         if (DEBUG_COLLISIONS) {
             // Collision normal line
-            drawLine(a.pos, b.pos, '#000000')
+            screen.drawLine(a.pos, b.pos, '#000000')
 
             // Ball A info rays
-            drawRay(a.pos, a.vel.unit(), a.rad, '#ff0000') // Velocity
-            drawRay(a.pos, wa.unit(), a.rad, '#0000ff') // Reflection line
-            drawRay(a.pos, va.unit(), a.rad, '#00ff00', 3) // New Velocity
+            screen.drawRay(a.pos, a.vel.unit(), a.rad, '#ff0000') // Velocity
+            screen.drawRay(a.pos, wa.unit(), a.rad, '#0000ff') // Reflection line
+            screen.drawRay(a.pos, va.unit(), a.rad, '#00ff00', 3) // New Velocity
 
             // Ball B info rays
-            drawRay(b.pos, b.vel.unit(), b.rad, '#ff0000') // Velocity
-            drawRay(b.pos, wb.unit(), b.rad, '#0000ff') // Reflection line
-            drawRay(b.pos, vb.unit(), b.rad, '#00ff00', 3) // New Velocity
+            screen.drawRay(b.pos, b.vel.unit(), b.rad, '#ff0000') // Velocity
+            screen.drawRay(b.pos, wb.unit(), b.rad, '#0000ff') // Reflection line
+            screen.drawRay(b.pos, vb.unit(), b.rad, '#00ff00', 3) // New Velocity
         }
 
         // Set velocities
@@ -130,14 +99,14 @@ while (number > 0) {
     let ball = new Ball(
         Vector.random(-200, 200, -200, 200),
         Vector.random(-10, 10, -10, 10),
-        random(10, 20)
+        random(10, 40)
     )
 
     // Let's not spawn any balls that are
     // colliding with other balls!
     let isFree = true
     for (let other of balls) {
-        if (ballCollision(ball, other)) {
+        if (ballCollision(screen, ball, other)) {
             isFree = false
         }
     }
@@ -154,15 +123,18 @@ for (let i = 0; i < balls.length - 1; ++i) {
         pairs.push([ balls[i], balls[j] ])
     }
 }
-console.log(pairs)
 
+// Create a screen
+const screen = new Screen('canvas')
+
+// Animation step
 let wait = 0
 function animate() {
     if (wait === 0) {
         // Render step
-        ctx.clearRect(0, 0, canvas.width, canvas.height)
+        screen.clear()
         for (const ball of balls) {
-            ball.draw()
+            ball.draw(screen)
         }
 
         // Update step
@@ -172,12 +144,12 @@ function animate() {
 
         // Boundary collision detection
         for (let ball of balls) {
-            boundaryCollision(ball)
+            boundaryCollision(screen, ball)
         }
 
         // Ball collision detection
         for (let [a, b] of pairs) {
-            let collision = ballCollision(a,b)
+            let collision = ballCollision(screen, a, b)
             if (PAUSE_ON_COLLISION && collision) {
                 wait = 100
             }
