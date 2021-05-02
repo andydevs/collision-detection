@@ -102,6 +102,9 @@ while (number > 0) {
         Vector.random(-5, 5, -5, 5),
         40
     )
+
+    // Let's not spawn any balls that are
+    // colliding with other balls!
     let isFree = true
     for (let other of balls) {
         if (ballCollision(ball, other)) {
@@ -113,6 +116,15 @@ while (number > 0) {
         --number
     }
 }
+
+// Determine pairs of balls
+let pairs = []
+for (let i = 0; i < balls.length - 1; ++i) {
+    for (let j = i + 1; j < balls.length; ++j) {
+        pairs.push([ balls[i], balls[j] ])
+    }
+}
+console.log(pairs)
 
 let wait = 0
 function animate() {
@@ -134,16 +146,11 @@ function animate() {
         }
 
         // Circle collision detection
-        for (let i in balls) {
-            let tball = balls[i]
-            for (let j in balls) {
-                if (i !== j) {
-                    let sball = balls[j]
-                    let collided = ballCollision(tball, sball)
-                    if (DEBUG_COLLISIONS && collided) {
-                        wait = 100
-                    }
-                }
+        for (let [a, b] of pairs) {
+            let acolb = ballCollision(a,b)
+            let bcola = ballCollision(b,a)
+            if (acolb || bcola) {
+                wait = 100
             }
         }
     }
