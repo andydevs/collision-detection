@@ -5,43 +5,9 @@
  * Created: 4 - 30 - 2021
  */
 import './style/main.scss'
+import Vector from './vector'
 
-class Vector {
-    constructor(x, y) {
-        this.x = x
-        this.y = y
-    }
-
-    add(other) {
-        return new Vector(this.x + other.x, this.y + other.y)
-    }
-
-    scale(scalar) {
-        return new Vector(this.x * scalar, this.y * scalar)
-    }
-
-    sub(other) {
-        return other.scale(-1).add(this)
-    }
-
-    dot(other) {
-        return this.x*other.x + this.y*other.y
-    }
-
-    magnitude() {
-        return Math.sqrt(this.dot(this))
-    }
-
-    unit() {
-        return this.scale(1/this.magnitude())
-    }
-}
-Vector.ZERO = new Vector(0, 0)
-
-const random = (m, x) => m + Math.random()*(x - m)
-const randomVector = (xm, xx, ym, yx) =>
-    new Vector(random(xm, xx), random(ym, yx))
-
+const DEBUG_COLLISIONS = true
 
 // Get canvas and drawcontext
 let canvas = document.getElementById('canvas')
@@ -111,45 +77,78 @@ function ballCollision(a, b) {
 
         // New velocity is the negative parallel + perpendicular
         a.vel = u.scale(-1).add(v)
+
+        // Debug draw ray
+        if (DEBUG_COLLISIONS) {
+            drawRay(a.pos, n, a.rad*0.60, '#0000ff')
+            drawRay(a.pos, u.scale(-1), a.rad*0.60, '#009900')
+            drawRay(a.pos, v, a.rad*0.60, '#ff0000')
+        }
+
+        // Return true if the ball collided
+        return true
     }
+
+    // No ball collision
+    return false
 }
 
+// Generate a number of balls
+let number = 6
 let balls = []
-for (let index = 0; index < 6; index++) {
-    balls.push(
-        new Ball(
-            randomVector(-200, 200, -200, 200),
-            randomVector(-5, 5, -5, 5)
-        )
+while (number > 0) {
+    let ball = new Ball(
+        Vector.random(-200, 200, -200, 200),
+        Vector.random(-5, 5, -5, 5),
+        40
     )
+    let isFree = true
+    for (let other of balls) {
+        if (ballCollision(ball, other)) {
+            isFree = false
+        }
+    }
+    if (isFree) {
+        balls.push(ball)
+        --number
+    }
 }
 
+let wait = 0
 function animate() {
-    // Render step
-    ctx.clearRect(0, 0, canvas.width, canvas.height)
-    for (const ball of balls) {
-        ball.draw()
-    }
+    if (wait === 0) {
+        // Render step
+        ctx.clearRect(0, 0, canvas.width, canvas.height)
+        for (const ball of balls) {
+            ball.draw()
+        }
 
-    // Update step
-    for (let ball of balls) {
-        ball.update()
-    }
+        // Update step
+        for (let ball of balls) {
+            ball.update()
+        }
 
-    // Boundary collision detection
-    for (let ball of balls) {
-        boundaryCollision(ball)
-    }
+        // Boundary collision detection
+        for (let ball of balls) {
+            boundaryCollision(ball)
+        }
 
-    // Circle collision detection
-    for (let i in balls) {
-        let tball = balls[i]
-        for (let j in balls) {
-            if (i !== j) {
-                let sball = balls[j]
-                ballCollision(tball, sball)
+        // Circle collision detection
+        for (let i in balls) {
+            let tball = balls[i]
+            for (let j in balls) {
+                if (i !== j) {
+                    let sball = balls[j]
+                    let collided = ballCollision(tball, sball)
+                    if (DEBUG_COLLISIONS && collided) {
+                        wait = 100
+                    }
+                }
             }
         }
+    }
+    else {
+        --wait
     }
 
     // Next animation frame
