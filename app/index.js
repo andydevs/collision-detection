@@ -17,19 +17,20 @@ let ctx = canvas.getContext('2d')
 const O = new Vector(canvas.width, canvas.height).scale(1/2)
 const centered = r => new Vector(O.x + r.x, O.y - r.y)
 
-function drawLine(p0, p1, color) {
+function drawLine(p0, p1, color, width=1) {
     let t0 = centered(p0)
     let t1 = centered(p1)
     ctx.strokeStyle = color
+    ctx.lineWidth = width
     ctx.beginPath()
     ctx.moveTo(t0.x, t0.y)
     ctx.lineTo(t1.x, t1.y)
     ctx.stroke()
 }
 
-function drawRay(p, d, l, color) {
+function drawRay(p, d, l, color, width=1) {
     let s = p.add(d.scale(l))
-    drawLine(p, s, color)
+    drawLine(p, s, color, width)
 }
 
 function drawCircle(pos, rad) {
@@ -73,17 +74,18 @@ function ballCollision(a, b) {
         // Find component of velocity parallel to normal (u)
         // and component of velocity perpendicular to normal (v)
         let u = n.scale(a.vel.dot(n))
-        let v = a.vel.add(u.scale(-1))
-
-        // New velocity is the negative parallel + perpendicular
-        a.vel = u.scale(-1).add(v)
+        let v = a.vel.sub(u)
 
         // Debug draw ray
         if (DEBUG_COLLISIONS) {
-            drawRay(a.pos, n, a.rad*0.60, '#0000ff')
-            drawRay(a.pos, u.scale(-1), a.rad*0.60, '#009900')
-            drawRay(a.pos, v, a.rad*0.60, '#ff0000')
+            drawLine(a.pos, b.pos, '#000000')
+            drawRay(a.pos, v.unit(), a.rad, '#0000ff')
+            drawRay(a.pos, a.vel.unit(), a.rad, '#ff0000')
+            drawRay(a.pos, u.scale(-1).add(v).unit(), a.rad, '#009900', 2)
         }
+
+        // New velocity is the negative parallel + perpendicular
+        a.vel = u.scale(-1).add(v)
 
         // Return true if the ball collided
         return true
@@ -95,12 +97,13 @@ function ballCollision(a, b) {
 
 // Generate a number of balls
 let number = 6
+let radius = 40
 let balls = []
 while (number > 0) {
     let ball = new Ball(
         Vector.random(-200, 200, -200, 200),
         Vector.random(-5, 5, -5, 5),
-        40
+        radius
     )
 
     // Let's not spawn any balls that are
@@ -145,11 +148,11 @@ function animate() {
             boundaryCollision(ball)
         }
 
-        // Circle collision detection
+        // Ball collision detection
         for (let [a, b] of pairs) {
             let acolb = ballCollision(a,b)
             let bcola = ballCollision(b,a)
-            if (acolb || bcola) {
+            if (DEBUG_COLLISIONS && (acolb || bcola)) {
                 wait = 100
             }
         }
