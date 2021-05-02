@@ -19,6 +19,11 @@ class Ball {
         this.rad = rad
     }
 
+    // Mass is 1/10 the radius
+    mass() {
+        return this.rad / 10
+    }
+
     draw(screen) {
         screen.drawCircle(this.pos, this.rad)
     }
@@ -30,14 +35,20 @@ class Ball {
 
 function boundaryCollision(screen, ball) {
     let collided = false
+
+    // Reflect againt vertical bounds
     if (Math.abs(ball.pos.y) > screen.canvas.height/2 - ball.rad) {
         ball.vel.y *= -1
         collided ||= true
     }
+
+    // Reflect against horizontal bounds
     if (Math.abs(ball.pos.x) > screen.canvas.width/2 - ball.rad) {
         ball.vel.x *= -1
         collided ||= true
     }
+
+    // Return true if collision
     return collided
 }
 
@@ -60,9 +71,11 @@ function ballCollision(screen, a, b) {
         let wb = b.vel.sub(ub)
 
         // Momentum exchange
-        let p = ua.magnitude() + ub.magnitude()
-        let va = nb.scale(p/2).add(wa)
-        let vb = na.scale(p/2).add(wb)
+        // Compute total momentum and
+        // Split evenly between masses
+        let p = a.mass()*ua.magnitude() + b.mass()*ub.magnitude()
+        let va = nb.scale(p/2/a.mass()).add(wa)
+        let vb = na.scale(p/2/b.mass()).add(wb)
 
         // Debug draw ray
         if (DEBUG_COLLISIONS) {
@@ -92,10 +105,14 @@ function ballCollision(screen, a, b) {
     return false
 }
 
+// Create a screen
+const screen = new Screen('canvas')
+
 // Generate a number of balls
 let number = 20
 let balls = []
 while (number > 0) {
+    // Create a ball
     let ball = new Ball(
         Vector.random(-200, 200, -200, 200),
         Vector.random(-10, 10, -10, 10),
@@ -104,28 +121,15 @@ while (number > 0) {
 
     // Let's not spawn any balls that are
     // colliding with other balls!
-    let isFree = true
+    let collided = false
     for (let other of balls) {
-        if (ballCollision(screen, ball, other)) {
-            isFree = false
-        }
+        collided ||= ballCollision(screen, ball, other)
     }
-    if (isFree) {
+    if (!collided) {
         balls.push(ball)
         --number
     }
 }
-
-// Determine pairs of balls
-let pairs = []
-for (let i = 0; i < balls.length - 1; ++i) {
-    for (let j = i + 1; j < balls.length; ++j) {
-        pairs.push([ balls[i], balls[j] ])
-    }
-}
-
-// Create a screen
-const screen = new Screen('canvas')
 
 // Animation step
 let wait = 0
@@ -147,11 +151,15 @@ function animate() {
             boundaryCollision(screen, ball)
         }
 
-        // Ball collision detection
-        for (let [a, b] of pairs) {
-            let collision = ballCollision(screen, a, b)
-            if (PAUSE_ON_COLLISION && collision) {
-                wait = 100
+        // Ball pair collision detection
+        for (let i = 0; i < balls.length - 1; ++i) {
+            for (let j = i + 1; j < balls.length; ++j) {
+                let a = balls[i]
+                let b = balls[j]
+                let collision = ballCollision(screen, a, b)
+                if (PAUSE_ON_COLLISION && collision) {
+                    wait = 100
+                }
             }
         }
     }
