@@ -5,7 +5,7 @@
  * Created: 4 - 30 - 2021
  */
 
-const random = (m, x) => m + Math.random()*(x - m)
+export const random = (m, x) => m + Math.random()*(x - m)
 
 export default class Vector {
     constructor(x, y) {

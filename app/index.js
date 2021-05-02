@@ -5,7 +5,7 @@
  * Created: 4 - 30 - 2021
  */
 import './style/main.scss'
-import Vector from './vector'
+import Vector, { random } from './vector'
 
 const PAUSE_ON_COLLISION = false
 const DEBUG_COLLISIONS = false
@@ -124,14 +124,13 @@ function ballCollision(a, b) {
 }
 
 // Generate a number of balls
-let number = 280
-let radius = 10
+let number = 20
 let balls = []
 while (number > 0) {
     let ball = new Ball(
         Vector.random(-200, 200, -200, 200),
         Vector.random(-10, 10, -10, 10),
-        radius
+        random(10, 20)
     )
 
     // Let's not spawn any balls that are
