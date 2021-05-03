@@ -5,7 +5,7 @@
  * Created: 4 - 30 - 2021
  */
 import './style/main.scss'
-import Vector, { random } from './vector'
+import Vector, { random, randomWithBias } from './vector'
 import Screen from './screen'
 
 // Parameters
@@ -102,6 +102,11 @@ function ballCollision(screen, a, b) {
         let na = d.unit()
         let nb = na.scale(-1)
 
+        // Correction translation
+        let correction = (a.rad + b.rad) - d.magnitude()
+        let pa = a.pos.add(nb.scale(correction/2))
+        let pb = b.pos.add(na.scale(correction/2))
+
         // Find projections of velocity on normal
         let ua = na.scale(a.vel.dot(na))
         let ub = nb.scale(b.vel.dot(nb))
@@ -134,7 +139,9 @@ function ballCollision(screen, a, b) {
         }
 
         // Set velocities
+        a.pos = pa
         a.vel = va
+        b.pos = pb
         b.vel = vb
 
         // Return true because the ball collided
@@ -148,33 +155,19 @@ function ballCollision(screen, a, b) {
 // Create a screen
 const screen = new Screen('canvas')
 
-// Slowly release balls into the screen
-let number = 20
+// Generate a bunch of balls
+const number = 40
 let balls = []
-function slowRelease() {
-    if (number > 0) {
-        // Create a ball
-        let ball = new Ball(
+for (let i = 0; i < number; i++) {
+    balls.push(
+        new Ball(
             Vector.random(-300, 300, -300, 300),
-            Vector.random(-10, 10, -10, 10),
-            random(10, 40)
+            Vector.random(-5, 5, -5, 5),
+            randomWithBias(10, 50, 0.6)
         )
-
-        // Let's not spawn any balls that are
-        // colliding with other balls!
-        let collided = false
-        for (let other of balls) {
-            collided ||= ballCollision(screen, ball, other)
-        }
-        if (!collided) {
-            balls.push(ball)
-            --number
-        }
-
-        setTimeout(slowRelease, 1000)
-    }
+    )
 }
-slowRelease()
+
 
 // Animation step
 let wait = 0

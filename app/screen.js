@@ -47,6 +47,7 @@ export default class Screen {
     drawCircle(pos, rad, color='#000000') {
         let trfp = this.centered(pos)
         this.ctx.fillStyle = color
+        this.ctx.lineWidth = 1
         this.ctx.beginPath()
         this.ctx.arc(trfp.x, trfp.y, rad, 0, 2*Math.PI)
         this.ctx.fill()

@@ -7,6 +7,13 @@
 
 export const random = (m, x) => m + Math.random()*(x - m)
 
+export function randomWithBias(m, x, bias=0) {
+    let k = Math.pow(1 - bias, 3)
+    let r = Math.random()
+    let g = (r*k)/(r*k - r + 1)
+    return m + g*(x - m)
+}
+
 export default class Vector {
     constructor(x, y) {
         this.x = x
