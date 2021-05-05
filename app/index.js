@@ -34,63 +34,42 @@ class Ball {
     }
 }
 
-function boundaryCollision(screen, ball) {
-    let collided = false
-
-    // Upper bound
-    if (ball.pos.y + ball.rad > screen.canvas.height/2) {
-        // Translate down to correct
-        let distance = (ball.pos.y + ball.rad) - screen.canvas.height/2
-        ball.pos.y -= distance
-
-        // Flip velocity
-        ball.vel.y *= -1
-
-        // Update collision
-        collided ||= true
+class Boundary {
+    constructor(pos, norm) {
+        this.pos = pos
+        this.norm = norm
     }
+}
 
-    // Lower bound
-    if (ball.pos.y - ball.rad < -screen.canvas.height/2) {
-        // Translate up to correct
-        let distance = (ball.pos.y - ball.rad) + screen.canvas.height/2
-        ball.pos.y -= distance
-
-        // Flip velocity
-        ball.vel.y *= -1
-
-        // Update collision
-        collided ||= true
-    }
-
-    // Right bound
-    if (ball.pos.x + ball.rad > screen.canvas.width/2) {
-        // Translate left to correct
-        let distance = (ball.pos.x + ball.rad) - screen.canvas.width/2
-        ball.pos.x -= distance
-
-        // Flip velocity
-        ball.vel.x *= -1
-
-        // Update collision
-        collided ||= true
-    }
-
-    // Left bound
-    if (ball.pos.x - ball.rad < -screen.canvas.width/2) {
-        // Translate right
-        let distance = (ball.pos.x - ball.rad) + screen.canvas.width/2
-        ball.pos.x -= distance
+function boundaryCollision(screen, boundary, ball) {
+    // Distance to boundary
+    let distance = ball.pos.sub(boundary.pos).dot(boundary.norm)
+    if (distance < ball.rad) {
+        // Boundary intersection correction
+        let correction = ball.rad - distance
+        ball.pos = ball.pos.add(boundary.norm.scale(correction))
         
-        // Flip velocity
-        ball.vel.x *= -1
+        // Velocity reflection
+        let uVf = boundary.norm.scale(ball.vel.dot(boundary.norm))
+        let vVf = ball.vel.sub(uVf)
+        let vf = vVf.sub(uVf)
+        
+        if (DEBUG_COLLISIONS) {
+            screen.drawRay(ball.pos, ball.vel.unit(), ball.rad, '#ff0000') // Incoming velocity
+            screen.drawRay(ball.pos, vVf.unit(), ball.rad, '#0000ff')      // Reflection line
+            screen.drawRay(ball.pos, vf.unit(), ball.rad, '#00ff00', 3)    // New Velocity
+        }
 
-        // Update collision
-        collided ||= true
+        // Update velocity
+        ball.vel = vf
+        
+        // Ball has collided
+        return true
     }
-
-    // Return true if collision
-    return collided
+    else {
+        // Ball has not collided
+        return false
+    }
 }
 
 function ballCollision(screen, a, b) {
@@ -138,12 +117,12 @@ function ballCollision(screen, a, b) {
 
             // Ball A info rays
             screen.drawRay(a.pos, a.vel.unit(), a.rad, '#ff0000') // Velocity
-            screen.drawRay(a.pos, wa.unit(), a.rad, '#0000ff') // Reflection line
+            screen.drawRay(a.pos, wa.unit(), a.rad, '#0000ff')    // Reflection line
             screen.drawRay(a.pos, va.unit(), a.rad, '#00ff00', 3) // New Velocity
 
             // Ball B info rays
             screen.drawRay(b.pos, b.vel.unit(), b.rad, '#ff0000') // Velocity
-            screen.drawRay(b.pos, wb.unit(), b.rad, '#0000ff') // Reflection line
+            screen.drawRay(b.pos, wb.unit(), b.rad, '#0000ff')    // Reflection line
             screen.drawRay(b.pos, vb.unit(), b.rad, '#00ff00', 3) // New Velocity
         }
 
@@ -164,6 +143,14 @@ function ballCollision(screen, a, b) {
 // Create a screen
 const screen = new Screen('canvas')
 
+// Get screen boundaries
+let boundaries = [
+    new Boundary(new Vector(0, screen.Y), new Vector(0, -1)),
+    new Boundary(new Vector(0, -screen.Y), new Vector(0, 1)),
+    new Boundary(new Vector(screen.X, 0), new Vector(-1, 0)),
+    new Boundary(new Vector(-screen.X, 0), new Vector(1, 0))
+]
+
 // Generate a bunch of balls
 const number = 40
 let balls = []
@@ -177,8 +164,8 @@ for (let i = 0; i < number; i++) {
     )
 }
 
-
 // Animation step
+let collision
 let wait = 0
 function animate() {
     if (wait === 0) {
@@ -193,20 +180,26 @@ function animate() {
             ball.update()
         }
 
-        // Boundary collision detection
-        for (let ball of balls) {
-            boundaryCollision(screen, ball)
-        }
-
-        // Ball pair collision detection
+        // Collision detection
         for (let i = 0; i < balls.length - 1; ++i) {
+            // Get ball and reset collision
+            let a = balls[i]
+            collision = false
+            
+            // Check with boundary
+            for (let boundary of boundaries) {
+                collision ||= boundaryCollision(screen, boundary, a)
+            }
+
+            // Check with other ball
             for (let j = i + 1; j < balls.length; ++j) {
-                let a = balls[i]
                 let b = balls[j]
-                let collision = ballCollision(screen, a, b)
-                if (PAUSE_ON_COLLISION && collision) {
-                    wait = 100
-                }
+                collision ||= ballCollision(screen, a, b)
+            }
+
+            // Wait if we've collided and we're pausing on each collision
+            if (PAUSE_ON_COLLISION && collision) {
+                wait = 100
             }
         }
     }

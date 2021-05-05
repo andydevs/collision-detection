@@ -15,6 +15,14 @@ export default class Screen {
             this.canvas.height/2)
     }
 
+    get X() {
+        return this.canvas.width/2
+    }
+
+    get Y() {
+        return this.canvas.height/2
+    }
+
     centered(r) {
         return new Vector(
             this.origin.x + r.x, 
