@@ -107,8 +107,8 @@ function ballCollision(screen, a, b) {
             2*ma, (mb - ma)
         ).scale(1/(ma + mb))
         let sf = mP.transform(si)
-        let va = nb.scale(sf.x).add(wa)
-        let vb = na.scale(sf.y).add(wb)
+        let va = na.scale(-sf.x).add(wa)
+        let vb = nb.scale(-sf.y).add(wb)
 
         // Debug draw ray
         if (DEBUG_COLLISIONS) {
