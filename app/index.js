@@ -5,7 +5,8 @@
  * Created: 4 - 30 - 2021
  */
 import './style/main.scss'
-import Vector, { random, randomWithBias } from './vector'
+import Vector, { randomWithBias } from './vector'
+import Matrix from './matrix'
 import Screen from './screen'
 
 // Parameters
@@ -103,9 +104,9 @@ function ballCollision(screen, a, b) {
         let nb = na.scale(-1)
 
         // Correction translation
-        let correction = (a.rad + b.rad) - d.magnitude()
-        let pa = a.pos.add(nb.scale(correction/2))
-        let pb = b.pos.add(na.scale(correction/2))
+        let corr = (a.rad + b.rad) - d.magnitude()
+        let pa = a.pos.add(nb.scale(corr/2))
+        let pb = b.pos.add(na.scale(corr/2))
 
         // Find projections of velocity on normal
         let ua = na.scale(a.vel.dot(na))
@@ -118,15 +119,17 @@ function ballCollision(screen, a, b) {
         // Momentum exchange using the khan equation
         let ma = a.mass()
         let mb = b.mass()
-        let mt = ma + mb
-        let sai = ua.magnitude()
-        let sbi = ub.magnitude()
-        let saf = (ma - mb)*sai + 2*mb*sbi
-        let sbf = 2*ma*sai + (mb - ma)*sbi
-        saf /= mt
-        sbf /= mt
-        let va = nb.scale(saf).add(wa)
-        let vb = na.scale(sbf).add(wb)
+        let si = new Vector(
+            ua.magnitude(),
+            ub.magnitude()
+        )
+        let mP = new Matrix(
+            (ma - mb), 2*mb,
+            2*ma, (mb - ma)
+        ).scale(1/(ma + mb))
+        let sf = mP.transform(si)
+        let va = nb.scale(sf.x).add(wa)
+        let vb = na.scale(sf.y).add(wb)
 
         // Debug draw ray
         if (DEBUG_COLLISIONS) {
