@@ -20,6 +20,14 @@ export default class Vector {
         this.y = y
     }
 
+    get magnitude() {
+        return Math.sqrt(this.dot(this))
+    }
+
+    get unit() {
+        return this.scale(1/this.magnitude)
+    }
+
     add(other) {
         return new Vector(this.x + other.x, this.y + other.y)
     }
@@ -34,14 +42,6 @@ export default class Vector {
 
     dot(other) {
         return this.x*other.x + this.y*other.y
-    }
-
-    magnitude() {
-        return Math.sqrt(this.dot(this))
-    }
-
-    unit() {
-        return this.scale(1/this.magnitude())
     }
 }
 Vector.ZERO = new Vector(0, 0)
