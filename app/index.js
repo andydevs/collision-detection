@@ -152,14 +152,14 @@ let boundaries = [
 ]
 
 // Generate a bunch of balls
-const number = 40
+const number = 80
 let balls = []
 for (let i = 0; i < number; i++) {
     balls.push(
         new Ball(
             Vector.random(-300, 300, -300, 300),
             Vector.random(-5, 5, -5, 5),
-            randomWithBias(10, 50, 0.6)
+            randomWithBias(5, 50, 0.75)
         )
     )
 }
