@@ -115,12 +115,18 @@ function ballCollision(screen, a, b) {
         let wa = a.vel.sub(ua)
         let wb = b.vel.sub(ub)
 
-        // Momentum exchange
-        // Compute total momentum and
-        // Split evenly between masses
-        let p = a.mass()*ua.magnitude() + b.mass()*ub.magnitude()
-        let va = nb.scale(p/2/a.mass()).add(wa)
-        let vb = na.scale(p/2/b.mass()).add(wb)
+        // Momentum exchange using the khan equation
+        let ma = a.mass()
+        let mb = b.mass()
+        let mt = ma + mb
+        let sai = ua.magnitude()
+        let sbi = ub.magnitude()
+        let saf = (ma - mb)*sai + 2*mb*sbi
+        let sbf = 2*ma*sai + (mb - ma)*sbi
+        saf /= mt
+        sbf /= mt
+        let va = nb.scale(saf).add(wa)
+        let vb = na.scale(sbf).add(wb)
 
         // Debug draw ray
         if (DEBUG_COLLISIONS) {
