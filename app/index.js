@@ -12,6 +12,7 @@ import Screen from './screen'
 // Parameters
 let PAUSE_ON_COLLISION = false
 let DEBUG_COLLISIONS = false
+let WAIT_TIME = 100
 
 class Ball {
     constructor(pos, vel, rad=20) {
@@ -54,7 +55,7 @@ function boundaryCollision(screen, boundary, ball) {
         let vVf = ball.vel.sub(uVf)
         let vf = vVf.sub(uVf)
         
-        if (DEBUG_COLLISIONS) {
+        if (PAUSE_ON_COLLISION || DEBUG_COLLISIONS) {
             screen.drawRay(ball.pos, ball.vel.unit, ball.rad, '#ff0000') // Incoming velocity
             screen.drawRay(ball.pos, vVf.unit, ball.rad, '#0000ff')      // Reflection line
             screen.drawRay(ball.pos, vf.unit, ball.rad, '#00ff00', 3)    // New Velocity
@@ -111,7 +112,7 @@ function ballCollision(screen, a, b) {
         let vb = nb.scale(-sf.y).add(wb)
 
         // Debug draw ray
-        if (DEBUG_COLLISIONS) {
+        if (PAUSE_ON_COLLISION || DEBUG_COLLISIONS) {
             // Collision normal line
             screen.drawLine(a.pos, b.pos, '#000000')
 
@@ -164,11 +165,13 @@ for (let i = 0; i < number; i++) {
     )
 }
 
-// Animation step
-let collision
-let wait = 0
-function animate() {
-    if (wait === 0) {
+function *routine() {
+    // Setup part
+    let collision
+
+    // Loop part
+    while (true) 
+    {
         // Render step
         screen.clear()
         for (const ball of balls) {
@@ -199,15 +202,24 @@ function animate() {
 
             // Wait if we've collided and we're pausing on each collision
             if (PAUSE_ON_COLLISION && collision) {
-                wait = 100
+                for (let i = 0; i < WAIT_TIME; ++i) {
+                    yield;
+                }
             }
         }
-    }
-    else {
-        --wait
-    }
 
-    // Next animation frame
-    requestAnimationFrame(animate)
+        yield;
+    }
 }
-animate()
+
+function animateRoutine(routine) {
+    let generator = routine();
+    function anim() {
+        if (generator.next()) {
+            requestAnimationFrame(anim)
+        }
+    }
+    requestAnimationFrame(anim)
+}
+
+animateRoutine(routine)

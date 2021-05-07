@@ -52,5 +52,10 @@ module.exports = {
                 use: 'file-loader'
             }
         ]
-    }
+    },
+    plugins: [
+        new webpack.ProvidePlugin({
+            regeneratorRuntime: 'regenerator-runtime'
+        })
+    ]
 }
