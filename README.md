@@ -1,12 +1,11 @@
-Custom Web Stack Template
-================================================
+Collision Detection
+========================================================
 
-Template for whenever I'm building a new web 
-app/toy/experiment/thing to be hosted on GitHub 
-using my custom tech stack.
+Experimenting with implementing collision detection
+and momentum simulation of multiple spherical particles
 
 Technology
------------------------------------------------
+--------------------------------------------------------
 
 | For        | Name           |
 |:-----------|:---------------|
