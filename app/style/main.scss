@@ -12,6 +12,16 @@
 
 body {
     margin: 0;
+    background-color: #333;
+    color: white;
+}
+
+a {
+    color: #00aaff;
+    text-decoration: none;
+}
+a::before {
+    content: '>';
 }
 
 #app {
@@ -21,5 +31,4 @@ body {
 #canvas {
     width: 100%;
     max-width: 1280px;
-    border: 1px solid #ccc;
 } 
