@@ -7,33 +7,27 @@
 import Vector from './vector'
 
 export default class Screen {
-    constructor(elemid) {
-        this.canvas = document.getElementById(elemid)
-        this.ctx = canvas.getContext('2d')
-        this.origin = new Vector(
-            this.canvas.width/2, 
-            this.canvas.height/2)
+    constructor(ctx) {
+        this.ctx = ctx
     }
 
     get X() {
-        return this.canvas.width/2
+        return this.ctx.canvas.width/2
     }
 
     get Y() {
-        return this.canvas.height/2
+        return this.ctx.canvas.height/2
     }
 
     centered(r) {
-        return new Vector(
-            this.origin.x + r.x, 
-            this.origin.y - r.y)
+        return new Vector(this.X + r.x, this.Y - r.y)
     }
 
     clear() {
         this.ctx.clearRect(
             0, 0,
-            this.canvas.width,
-            this.canvas.height)
+            this.ctx.canvas.width,
+            this.ctx.canvas.height)
     }
 
     drawLine(p0, p1, color, width=1) {

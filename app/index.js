@@ -14,33 +14,33 @@ let PAUSE_ON_COLLISION = false
 let DEBUG_COLLISIONS = false
 let WAIT_TIME = 100
 
-// Create a screen
-const screen = new Screen('canvas')
-
-// Get screen boundaries
-let boundaries = [
-    new Boundary(new Vector(0, screen.Y), new Vector(0, -1)),
-    new Boundary(new Vector(0, -screen.Y), new Vector(0, 1)),
-    new Boundary(new Vector(screen.X, 0), new Vector(-1, 0)),
-    new Boundary(new Vector(-screen.X, 0), new Vector(1, 0))
-]
-
-// Generate a bunch of balls
-const number = 80
-let balls = []
-for (let i = 0; i < number; i++) {
-    balls.push(
-        new Ball(
-            Vector.random(-300, 300, -300, 300),
-            Vector.random(-5, 5, -5, 5),
-            randomWithBias(5, 50, 0.75)
-        )
-    )
-}
-
-function *routine() {
-    // Setup part
+function *routine(ctx) {
+    // Variables
     let collision
+
+    // Create a screen
+    const screen = new Screen(ctx)
+
+    // Get screen boundaries
+    let boundaries = [
+        new Boundary(new Vector(0, screen.Y), new Vector(0, -1)),
+        new Boundary(new Vector(0, -screen.Y), new Vector(0, 1)),
+        new Boundary(new Vector(screen.X, 0), new Vector(-1, 0)),
+        new Boundary(new Vector(-screen.X, 0), new Vector(1, 0))
+    ]
+
+    // Generate a bunch of balls
+    const number = 80
+    let balls = []
+    for (let i = 0; i < number; i++) {
+        balls.push(
+            new Ball(
+                Vector.random(-300, 300, -300, 300),
+                Vector.random(-5, 5, -5, 5),
+                randomWithBias(5, 50, 0.75)
+            )
+        )
+    }
 
     // Loop part
     while (true) 
@@ -89,8 +89,9 @@ function *routine() {
     }
 }
 
-function animateRoutine(routine) {
-    let generator = routine();
+function animateRoutine(canvas, routine) {
+    let ctx = canvas.getContext('2d')
+    let generator = routine(ctx);
     function anim() {
         if (generator.next()) {
             requestAnimationFrame(anim)
@@ -99,4 +100,5 @@ function animateRoutine(routine) {
     requestAnimationFrame(anim)
 }
 
-animateRoutine(routine)
+let canvas = document.getElementById('canvas')
+animateRoutine(canvas, routine)
