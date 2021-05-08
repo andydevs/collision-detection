@@ -7,34 +7,74 @@
 import Vector from './vector'
 import Matrix from './matrix'
 
+/**
+ * Spherical particle
+ */
 export class Ball {
+    /**
+     * Construct ball
+     * 
+     * @param {Vector} pos position of ball
+     * @param {Vector} vel velocity of vall
+     * @param {float} rad radius of ball
+     */
     constructor(pos, vel, rad=20) {
         this.pos = pos
         this.vel = vel
         this.rad = rad
     }
 
-    // Mass is 1/10 the radius
+    /**
+     * Mass is 1/10 the radius
+     */
     get mass() {
         return this.rad / 10
     }
 
+    /**
+     * Draw to screen
+     * 
+     * @param {Screen} screen screen to draw to
+     */
     draw(screen) {
         screen.drawCircle(this.pos, this.rad, '#00aaff')
     }
 
+    /**
+     * Update position of ball based on velocity
+     */
     update() {
         this.pos = this.pos.add(this.vel)
     }
 }
 
+/**
+ * Static boundary
+ */
 export class Boundary {
+    /**
+     * Construct boundary
+     * 
+     * @param {Vector} pos position of boundary
+     * @param {Vector} norm boundary normal
+     */
     constructor(pos, norm) {
         this.pos = pos
         this.norm = norm
     }
 }
 
+/**
+ * Check boundary collision of ball. Handle intersection
+ * correction and velocity reflection
+ * 
+ * @param {Screen} screen screen to draw debug to
+ * @param {Boundary} boundary boundary being checked
+ * @param {Ball} ball ball being checked
+ * @param {boolean} debug true if we're debugging
+ * 
+ * @returns true if collided
+ */
 export function boundaryCollision(screen, boundary, ball, debug=false) {
     // Distance to boundary
     let distance = ball.pos.sub(boundary.pos).dot(boundary.norm)
@@ -66,6 +106,17 @@ export function boundaryCollision(screen, boundary, ball, debug=false) {
     }
 }
 
+/**
+ * Check ball collision. Handle intersection correction
+ * and momentum transfer
+ * 
+ * @param {Screen} screen screen to draw debug to
+ * @param {Ball} a ball A being checked
+ * @param {Ball} b ball B being checked
+ * @param {boolean} debug true if debugging
+ * 
+ * @returns true if collided
+ */
 export function ballCollision(screen, a, b, debug=false) {
     // Difference vector
     let d = b.pos.sub(a.pos)
