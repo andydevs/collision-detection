@@ -6,7 +6,18 @@
  */
 import Vector from './vector'
 
+/**
+ * Transformation matrix
+ */
 export default class Matrix {
+    /**
+     * Construct matrix
+     * 
+     * @param {float} xx xx component of Matrix 
+     * @param {float} xy xy component of Matrix 
+     * @param {float} yx yx component of Matrix 
+     * @param {float} yy yy component of Matrix 
+     */
     constructor(xx, xy, yx, yy) {
         this.xx = xx
         this.xy = xy
@@ -14,6 +25,13 @@ export default class Matrix {
         this.yy = yy
     }
 
+    /**
+     * Add other matrix
+     * 
+     * @param {Matrix} other other component to add
+     * 
+     * @returns result of addition
+     */
     add(other) {
         return new Matrix(
             this.xx + other.xx,
@@ -23,6 +41,13 @@ export default class Matrix {
         )
     }
 
+    /**
+     * Scale by scalar
+     * 
+     * @param {float} scalar scalar quantity to multiply
+     * 
+     * @returns result of scale
+     */
     scale(scalar) {
         return new Matrix(
             this.xx * scalar,
@@ -32,6 +57,13 @@ export default class Matrix {
         )
     }
 
+    /**
+     * Transform vector
+     * 
+     * @param {Vector} vect vector to transform
+     * 
+     * @returns transformed vector
+     */
     transform(vect) {
         return new Vector(
             this.xx*vect.x + this.xy*vect.y,
