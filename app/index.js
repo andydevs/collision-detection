@@ -14,6 +14,13 @@ let PAUSE_ON_COLLISION = false
 let DEBUG_COLLISIONS = false
 let WAIT_TIME = 100
 
+/**
+ * Animation routine
+ * 
+ * Each animation frame runs until yield
+ * 
+ * @param {2DContext} ctx 2d context
+ */
 function *routine(ctx) {
     // Variables
     let collision
@@ -89,6 +96,11 @@ function *routine(ctx) {
     }
 }
 
+/**
+ * Animation coroutine. Runs each yield in an animation frame
+ * 
+ * @param {Generator} routine animation routine
+ */
 function animateRoutine(canvas, routine) {
     let ctx = canvas.getContext('2d')
     let generator = routine(ctx);
@@ -100,5 +112,6 @@ function animateRoutine(canvas, routine) {
     requestAnimationFrame(anim)
 }
 
+// Animate
 let canvas = document.getElementById('canvas')
 animateRoutine(canvas, routine)
