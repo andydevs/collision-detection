@@ -38,6 +38,11 @@ for (let i = 0; i < number; i++) {
     )
 }
 
+/**
+ * Animation routine
+ * 
+ * Each animation frame runs until yield
+ */
 function *routine() {
     // Setup part
     let collision
@@ -89,6 +94,11 @@ function *routine() {
     }
 }
 
+/**
+ * Animation coroutine. Runs each yield in an animation frame
+ * 
+ * @param {Generator} routine animation routine
+ */
 function animateRoutine(routine) {
     let generator = routine();
     function anim() {
