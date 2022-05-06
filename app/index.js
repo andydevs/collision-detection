@@ -11,8 +11,9 @@ import Screen from './screen'
 
 // Parameters
 let PAUSE_ON_COLLISION = false
-let DEBUG_COLLISIONS = false
+let DEBUG_COLLISIONS = true
 let WAIT_TIME = 100
+let NUMBER = 80
 
 /**
  * Animation routine
@@ -37,9 +38,8 @@ function *routine(ctx) {
     ]
 
     // Generate a bunch of balls
-    const number = 80
     let balls = []
-    for (let i = 0; i < number; i++) {
+    for (let i = 0; i < NUMBER; i++) {
         balls.push(
             new Ball(
                 Vector.random(-300, 300, -300, 300),
