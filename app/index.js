@@ -10,108 +10,66 @@ import { Ball, Boundary, boundaryCollision, ballCollision } from "./physics";
 import Screen from './screen'
 
 // Parameters
-let PAUSE_ON_COLLISION = false
-let DEBUG_COLLISIONS = true
-let WAIT_TIME = 100
-let NUMBER = 80
+const DEBUG_COLLISIONS = true
+const NUMBER = 25
 
-/**
- * Animation routine
- * 
- * Each animation frame runs until yield
- * 
- * @param {2DContext} ctx 2d context
- */
-function *routine(ctx) {
-    // Variables
-    let collision
-
-    // Create a screen
-    const screen = new Screen(ctx)
-
-    // Get screen boundaries
-    let boundaries = [
-        new Boundary(new Vector(0, screen.Y), new Vector(0, -1)),
-        new Boundary(new Vector(0, -screen.Y), new Vector(0, 1)),
-        new Boundary(new Vector(screen.X, 0), new Vector(-1, 0)),
-        new Boundary(new Vector(-screen.X, 0), new Vector(1, 0))
-    ]
-
-    // Generate a bunch of balls
-    let balls = []
-    for (let i = 0; i < NUMBER; i++) {
-        balls.push(
-            new Ball(
-                Vector.random(-300, 300, -300, 300),
-                Vector.random(-5, 5, -5, 5),
-                randomWithBias(5, 50, 0.75)
-            )
-        )
-    }
-
-    // Loop part
-    while (true) 
-    {
-        // Render step
-        screen.clear()
-        for (const ball of balls) {
-            ball.draw(screen)
-        }
-
-        // Update step
-        for (let ball of balls) {
-            ball.update()
-        }
-
-        // Collision detection
-        for (let i = 0; i < balls.length - 1; ++i) {
-            // Get ball and reset collision
-            let a = balls[i]
-            collision = false
-            
-            // Check with boundary
-            for (let boundary of boundaries) {
-                collision ||= boundaryCollision(
-                    screen, boundary, a,
-                    PAUSE_ON_COLLISION || DEBUG_COLLISIONS)
-            }
-
-            // Check with other ball
-            for (let j = i + 1; j < balls.length; ++j) {
-                let b = balls[j]
-                collision ||= ballCollision(
-                    screen, a, b,
-                    PAUSE_ON_COLLISION || DEBUG_COLLISIONS)
-            }
-
-            // Wait if we've collided and we're pausing on each collision
-            if (PAUSE_ON_COLLISION && collision) {
-                for (let i = 0; i < WAIT_TIME; ++i) {
-                    yield;
-                }
-            }
-        }
-
-        yield;
-    }
-}
-
-/**
- * Animation coroutine. Runs each yield in an animation frame
- * 
- * @param {Generator} routine animation routine
- */
-function animateRoutine(canvas, routine) {
-    let ctx = canvas.getContext('2d')
-    let generator = routine(ctx);
-    function anim() {
-        if (generator.next()) {
-            requestAnimationFrame(anim)
-        }
-    }
-    requestAnimationFrame(anim)
-}
-
-// Animate
+// Create a screen
 let canvas = document.getElementById('canvas')
-animateRoutine(canvas, routine)
+let ctx = canvas.getContext('2d')
+let screen = new Screen(ctx)
+
+// Get screen boundaries
+let boundaries = [
+    new Boundary(new Vector(0, screen.Y), new Vector(0, -1)),
+    new Boundary(new Vector(0, -screen.Y), new Vector(0, 1)),
+    new Boundary(new Vector(screen.X, 0), new Vector(-1, 0)),
+    new Boundary(new Vector(-screen.X, 0), new Vector(1, 0))
+]
+
+// Generate a bunch of balls
+let balls = []
+for (let i = 0; i < NUMBER; i++) {
+    balls.push(
+        new Ball(
+            Vector.random(-300, 300, -300, 300),
+            Vector.random(-5, 5, -5, 5),
+            randomWithBias(5, 50, 0.75)
+        )
+    )
+}
+
+/**
+ * Runs each animation loop
+ */
+requestAnimationFrame(function loop() {
+    // Render step
+    screen.clear()
+    for (const ball of balls) {
+        ball.draw(screen)
+    }
+
+    // Update step
+    for (let ball of balls) {
+        ball.update()
+    }
+
+    // Collision detection
+    for (let i = 0; i < balls.length - 1; ++i) {
+        // Get ball and reset collision
+        let a = balls[i]
+        
+        // Check with boundary
+        for (let boundary of boundaries) {
+            boundaryCollision(screen, boundary, a, DEBUG_COLLISIONS)
+        }
+
+        // Check with other ball
+        for (let j = i + 1; j < balls.length; ++j) {
+            let b = balls[j]
+            ballCollision(screen, a, b, DEBUG_COLLISIONS)
+        }
+    }
+
+    // Reloop
+    requestAnimationFrame(loop)
+})
