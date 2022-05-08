@@ -10,8 +10,9 @@ import { Ball, Boundary, boundaryCollision, ballCollision } from "./physics";
 import Screen from './screen'
 
 // Parameters
-const DEBUG_COLLISIONS = true
-const NUMBER = 25
+let DEBUG_KDTREE = true
+let DEBUG_COLLISIONS = false
+let NUMBER = 50
 
 // Create a screen
 let canvas = document.getElementById('canvas')
@@ -33,7 +34,7 @@ for (let i = 0; i < NUMBER; i++) {
         new Ball(
             Vector.random(-300, 300, -300, 300),
             Vector.random(-5, 5, -5, 5),
-            randomWithBias(5, 50, 0.75)
+            randomWithBias(5, 50, 0.80)
         )
     )
 }
@@ -52,6 +53,58 @@ requestAnimationFrame(function loop() {
     for (let ball of balls) {
         ball.update()
     }
+    
+    let middle = arr => Math.floor(arr.length / 2)
+
+    function kdnode(dim, box, barr) {
+        // End conditions
+        if (barr.length === 1) return
+    
+        // Get median index
+        barr.sort((a, b) => a.pos[dim] - b.pos[dim])
+        let med = barr[middle(barr)].pos[dim]
+
+        // Draw median lines
+        if (DEBUG_KDTREE) {
+            screen.drawLine(
+                new Vector(
+                    dim === 'x' ? med : box.x[0],
+                    dim === 'y' ? med : box.y[0]
+                ),
+                new Vector(
+                    dim === 'x' ? med : box.x[1],
+                    dim === 'y' ? med : box.y[1]
+                ),
+                '#aaaaaa', 1
+            )
+        }
+
+        // Median-based partition
+        if (dim === 'x') {
+            kdnode('y', { 
+                x: [box.x[0], med], 
+                y: [...box.y] 
+            }, barr.slice(0, middle(barr)))
+            kdnode('y', { 
+                x: [med, box.x[1]], 
+                y: [...box.y] 
+            }, barr.slice(middle(barr)))
+        }
+        else {
+            kdnode('x', { 
+                x: [...box.x], 
+                y: [box.y[0], med] 
+            }, barr.slice(0, middle(barr)))
+            kdnode('x', { 
+                x: [...box.x], 
+                y: [med, box.y[1]] 
+            }, barr.slice(middle(barr)))
+        }
+    }
+    kdnode('x', { 
+        x: [-screen.W/2, screen.W/2], 
+        y: [-screen.H/2, screen.H/2] 
+    }, balls)
 
     // Collision detection
     for (let i = 0; i < balls.length - 1; ++i) {

@@ -19,6 +19,14 @@ export default class Screen {
         return this.ctx.canvas.height/2
     }
 
+    get W() {
+        return this.ctx.canvas.width;
+    }
+
+    get H() {
+        return this.ctx.canvas.height;
+    }
+
     centered(r) {
         return new Vector(this.X + r.x, this.Y - r.y)
     }
