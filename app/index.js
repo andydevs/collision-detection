@@ -10,9 +10,10 @@ import { Ball, Boundary, boundaryCollision, ballCollision } from "./physics";
 import Screen from './screen'
 
 // Parameters
-let DEBUG_KDTREE = true
+let DEBUG_BVHEIR = true
 let DEBUG_COLLISIONS = false
-let NUMBER = 50
+let NUMBER = 5
+let BIAS = 0.45
 
 // Create a screen
 let canvas = document.getElementById('canvas')
@@ -34,9 +35,42 @@ for (let i = 0; i < NUMBER; i++) {
         new Ball(
             Vector.random(-300, 300, -300, 300),
             Vector.random(-5, 5, -5, 5),
-            randomWithBias(5, 50, 0.80)
+            randomWithBias(5, 50, BIAS)
         )
     )
+}
+
+function boundingVolume(screen, group, axis='x', root=true) {
+    let pos0 = new Vector(screen.X + screen.W/2, screen.Y + screen.H/2)
+    let pos1 = new Vector(- screen.X - screen.W/2, - screen.Y - screen.H/2)
+
+    for (const ball of group) {
+        pos0.x = Math.min(ball.x - ball.rad, pos0.x)
+        pos1.x = Math.max(ball.x + ball.rad, pos1.x)
+    }
+    for (const ball of group) {
+        pos0.y = Math.min(ball.y - ball.rad, pos0.y)
+        pos1.y = Math.max(ball.y + ball.rad, pos1.y)
+    }
+
+    console.log(pos0, pos1)
+    screen.drawBoundaryBox(pos0, pos1)
+
+    if (group.length == 1) return group[0]
+    let sortedgroup = group.sort((a, b) => a.pos[axis] - b.pos[axis])
+    let median = Math.floor(sortedgroup.length / 2)
+    let g1 = sortedgroup.slice(0, median)
+    let g2 = sortedgroup.slice(median)
+    let left, right;
+    if (axis === 'x') {
+        left = boundingVolume(screen, g1, 'y', false)
+        right = boundingVolume(screen, g2, 'y', false)
+    }
+    else {
+        left = boundingVolume(screen, g1, 'x', false)
+        right = boundingVolume(screen, g2, 'x', false)
+    }
+    return { axis, left, right }
 }
 
 /**
@@ -45,66 +79,12 @@ for (let i = 0; i < NUMBER; i++) {
 requestAnimationFrame(function loop() {
     // Render step
     screen.clear()
-    for (const ball of balls) {
-        ball.draw(screen)
-    }
-
+    for (const ball of balls) { ball.draw(screen) }
     // Update step
-    for (let ball of balls) {
-        ball.update()
-    }
+    for (let ball of balls) { ball.update() }
     
-    let middle = arr => Math.floor(arr.length / 2)
-
-    function kdnode(dim, box, barr) {
-        // End conditions
-        if (barr.length === 1) return
-    
-        // Get median index
-        barr.sort((a, b) => a.pos[dim] - b.pos[dim])
-        let med = barr[middle(barr)].pos[dim]
-
-        // Draw median lines
-        if (DEBUG_KDTREE) {
-            screen.drawLine(
-                new Vector(
-                    dim === 'x' ? med : box.x[0],
-                    dim === 'y' ? med : box.y[0]
-                ),
-                new Vector(
-                    dim === 'x' ? med : box.x[1],
-                    dim === 'y' ? med : box.y[1]
-                ),
-                '#aaaaaa', 1
-            )
-        }
-
-        // Median-based partition
-        if (dim === 'x') {
-            kdnode('y', { 
-                x: [box.x[0], med], 
-                y: [...box.y] 
-            }, barr.slice(0, middle(barr)))
-            kdnode('y', { 
-                x: [med, box.x[1]], 
-                y: [...box.y] 
-            }, barr.slice(middle(barr)))
-        }
-        else {
-            kdnode('x', { 
-                x: [...box.x], 
-                y: [box.y[0], med] 
-            }, barr.slice(0, middle(barr)))
-            kdnode('x', { 
-                x: [...box.x], 
-                y: [med, box.y[1]] 
-            }, barr.slice(middle(barr)))
-        }
-    }
-    kdnode('x', { 
-        x: [-screen.W/2, screen.W/2], 
-        y: [-screen.H/2, screen.H/2] 
-    }, balls)
+    // Build bounding volume
+    let heir = boundingVolume(screen, balls)
 
     // Collision detection
     for (let i = 0; i < balls.length - 1; ++i) {

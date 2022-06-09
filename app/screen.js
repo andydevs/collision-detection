@@ -62,4 +62,14 @@ export default class Screen {
         this.ctx.arc(trfp.x, trfp.y, rad, 0, 2*Math.PI)
         this.ctx.fill()
     }
+
+    drawBoundaryBox(pos1, pos2, color='#aaaaaa') {
+        let c1 = this.centered(pos1)
+        let c2 = this.centered(pos2)
+        this.ctx.strokeStyle = color
+        this.ctx.lineWidth = 1
+        this.ctx.beginPath()
+        this.ctx.rect(c1.x, c1.y, c2.x - c1.x, c2.y - c1.y)
+        this.ctx.stroke()
+    }
 }
