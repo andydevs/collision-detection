@@ -5,7 +5,22 @@
  * Created: 4 - 30 - 2021
  */
 import Vector from './vector'
-import { Boundary } from './physics'
+
+/**
+ * Static boundary
+ */
+export class Boundary {
+    /**
+     * Construct boundary
+     * 
+     * @param {Vector} pos position of boundary
+     * @param {Vector} norm boundary normal
+     */
+    constructor(pos, norm) {
+        this.pos = pos
+        this.norm = norm
+    }
+}
 
 export default class Screen {
     constructor(ctx) {

@@ -1,4 +1,5 @@
 import { CircleGizmo, LineGizmo } from "./gizmos";
+import { Rect } from "./rect";
 import Vector from "./vector";
 
 /**
@@ -74,18 +75,19 @@ export function evenPartitioningGrid(rows, columns) {
         let pairs = []
         for (let i = 0; i < columnBreaks.length - 1; ++i) {
             for (let j = 0; j < rowBreaks.length - 1; ++j) {
-                let x0 = columnBreaks[i]
-                let x1 = columnBreaks[i + 1]
-                let y0 = rowBreaks[j] 
-                let y1 = rowBreaks[j + 1]
-                let contents = balls.filter(
-                    ({ pos: { x, y }, rad: r }) =>
-                        (x0 < x + r && x - r <= x1) 
-                        && (y0 < y + r && y - r <= y1))
+                let cell = new Rect(
+                    columnBreaks[i],
+                    columnBreaks[i + 1],
+                    rowBreaks[j],
+                    rowBreaks[j + 1]
+                )
+                let contents = balls.filter(ball => 
+                    ball.boundingBox.overlaps(cell))
                 if (debug) {
+                    let { x0, x1, y0, y1 } = cell
                     gizmos.push(new CircleGizmo(time + 10,
                         new Vector((x0+x1)/2, (y0+y1)/2),
-                        contents.length*2,
+                        contents.length * 2,
                         contents.length > 1 ? '#544' : '#444'))
                 }
                 pairs.push(...uniquePairs(contents))

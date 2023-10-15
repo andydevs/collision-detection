@@ -12,64 +12,6 @@ import { CollisionGizmo, LineGizmo } from './gizmos'
 const SECONDS = 1000
 
 /**
- * Spherical particle
- */
-export class Ball {
-    /**
-     * Construct ball
-     * 
-     * @param {Vector} pos position of ball
-     * @param {Vector} vel velocity of vall
-     * @param {float} rad radius of ball
-     */
-    constructor(pos, vel, rad=20, color='#ffffff') {
-        this.pos = pos
-        this.vel = vel
-        this.rad = rad
-        this.color = color
-    }
-
-    /**
-     * Mass is 1/10 the radius
-     */
-    get mass() {
-        return this.rad / 10
-    }
-
-    /**
-     * Draw to screen
-     * 
-     * @param {Screen} screen screen to draw to
-     */
-    draw(screen) {
-        screen.drawCircle(this.pos, this.rad, this.color)
-    }
-
-    /**
-     * Update position of ball based on velocity
-     */
-    update() {
-        this.pos = this.pos.add(this.vel)
-    }
-}
-
-/**
- * Static boundary
- */
-export class Boundary {
-    /**
-     * Construct boundary
-     * 
-     * @param {Vector} pos position of boundary
-     * @param {Vector} norm boundary normal
-     */
-    constructor(pos, norm) {
-        this.pos = pos
-        this.norm = norm
-    }
-}
-
-/**
  * Check boundary collision of ball. Handle intersection
  * correction and velocity reflection
  * 

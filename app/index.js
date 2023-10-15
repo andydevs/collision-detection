@@ -5,14 +5,12 @@
  * Created: 4 - 30 - 2021
  */
 import './style/main.scss'
+import { Ball } from './geometry'
 import Vector, { randomWithBias } from './vector'
-import { Ball, Boundary, boundaryCollision, ballCollision } from './physics'
-import { evenPartitioning, evenPartitioningGrid, noPartitioning } from './partitioning'
+import { boundaryCollision, ballCollision } from './physics'
+import { evenPartitioningGrid, noPartitioning } from './partitioning'
 import Screen from './screen'
 import { LineGizmo } from './gizmos'
-
-// Parameters
-let DEBUG_INITIALIZATION = true
 
 // Create a screen
 let canvas = document.getElementById('canvas')
@@ -33,8 +31,6 @@ function genearateBalls(number, bias) {
         'cyan', 'lime', 'coral',
         'yellow', 'violet', 'white'
     ]
-    
-    // Generate a bunch of balls
     let balls = []
     for (let i = 0; i < number; i++) {
         let ball = new Ball(
@@ -46,14 +42,9 @@ function genearateBalls(number, bias) {
         console.log(ball)
         balls.push(ball)
     }
-    
-    // Return data
     console.groupEnd()
     return balls
 }
-
-// Query flag checkbox
-let queryFlag = (id) => document.querySelector(id).checked
 
 // Initialize
 let gizmos = []
@@ -94,8 +85,8 @@ requestAnimationFrame(function loop() {
     time = Date.now()
 
     // Debug flags
-    let DEBUG_COLLISIONS = queryFlag('#show-collision')
-    let DEBUG_PARTITIONING = queryFlag('#show-partitions')
+    let DEBUG_COLLISIONS = document.querySelector('#show-collision').checked
+    let DEBUG_PARTITIONING = document.querySelector('#show-partitions').checked
 
     // Partitioning selection
     let partSelection = document.querySelector('#partition-type').value
