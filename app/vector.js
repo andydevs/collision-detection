@@ -21,14 +21,20 @@ export const random = (m, x) => m + Math.random()*(x - m)
  * @param {float} m minimum
  * @param {float} x maximum
  * @param {float} bias bias value (0 to 1)
+ * @param {int} roundToNearest if non-negative integer, decimal place to round to
  * 
  * @returns Random biased number
  */
-export function randomWithBias(m, x, bias=0) {
+export function randomWithBias(m, x, bias=0, roundToNearest=undefined) {
     let k = Math.pow(1 - bias, 3)
     let r = Math.random()
     let g = (r*k)/(r*k - r + 1)
-    return m + g*(x - m)
+    let result = m + g*(x - m)
+    if (roundToNearest >= 0) {
+        let decimal = Math.pow(10, roundToNearest)
+        result = Math.round(result * decimal) / decimal
+    }
+    return result
 }
 
 /**
@@ -102,6 +108,15 @@ export default class Vector {
      */
     dot(other) {
         return this.x*other.x + this.y*other.y
+    }
+
+    /**
+     * Convert Vector to string representation
+     * 
+     * @returns string
+     */
+    toString() {
+        return `(${this.x.toFixed(1)}, ${this.y.toFixed(1)})`
     }
 }
 

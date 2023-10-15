@@ -18,10 +18,11 @@ export class Ball {
      * @param {Vector} vel velocity of vall
      * @param {float} rad radius of ball
      */
-    constructor(pos, vel, rad=20) {
+    constructor(pos, vel, rad=20, color='#ffffff') {
         this.pos = pos
         this.vel = vel
         this.rad = rad
+        this.color = color
     }
 
     /**
@@ -37,7 +38,7 @@ export class Ball {
      * @param {Screen} screen screen to draw to
      */
     draw(screen) {
-        screen.drawCircle(this.pos, this.rad, '#00aaff')
+        screen.drawCircle(this.pos, this.rad, this.color)
     }
 
     /**
@@ -79,7 +80,13 @@ export function boundaryCollision(screen, boundary, ball, debug=false) {
     // Distance to boundary
     let distance = ball.pos.sub(boundary.pos).dot(boundary.norm)
     if (distance < ball.rad) {
-        // Boundary intersection correction
+        if (debug) {
+            console.group('collision')
+            console.log(boundary)
+            console.log(ball)
+            console.groupEnd()
+        }
+
         let correction = ball.rad - distance
         ball.pos = ball.pos.add(boundary.norm.scale(correction))
         
