@@ -6,6 +6,10 @@
  */
 import Vector from './vector'
 import Matrix from './matrix'
+import { CollisionGizmo, LineGizmo } from './gizmos'
+
+// Time constants
+const SECONDS = 1000
 
 /**
  * Spherical particle
@@ -72,11 +76,13 @@ export class Boundary {
  * @param {Screen} screen screen to draw debug to
  * @param {Boundary} boundary boundary being checked
  * @param {Ball} ball ball being checked
+ * @param {int} time current timestamp
  * @param {boolean} debug true if we're debugging
+ * @param {Array} gizmos gizmos array
  * 
  * @returns true if collided
  */
-export function boundaryCollision(screen, boundary, ball, debug=false) {
+export function boundaryCollision(screen, boundary, ball, time, gizmos, debug=false) {
     // Distance to boundary
     let distance = ball.pos.sub(boundary.pos).dot(boundary.norm)
     if (distance < ball.rad) {
@@ -86,7 +92,6 @@ export function boundaryCollision(screen, boundary, ball, debug=false) {
             console.log(ball)
             console.groupEnd()
         }
-
         let correction = ball.rad - distance
         ball.pos = ball.pos.add(boundary.norm.scale(correction))
         
@@ -95,10 +100,11 @@ export function boundaryCollision(screen, boundary, ball, debug=false) {
         let vVf = ball.vel.sub(uVf)
         let vf = vVf.sub(uVf)
         
+        // Debug collision
         if (debug) {
-            screen.drawRay(ball.pos, ball.vel.unit, ball.rad, '#ff0000') // Incoming velocity
-            screen.drawRay(ball.pos, vVf.unit, ball.rad, '#0000ff')      // Reflection line
-            screen.drawRay(ball.pos, vf.unit, ball.rad, '#00ff00', 3)    // New Velocity
+            gizmos.push(
+                new CollisionGizmo(time + 1*SECONDS, ball.pos, ball.vel, uVf.scale(-1), vf)
+            )
         }
 
         // Update velocity
@@ -120,11 +126,13 @@ export function boundaryCollision(screen, boundary, ball, debug=false) {
  * @param {Screen} screen screen to draw debug to
  * @param {Ball} a ball A being checked
  * @param {Ball} b ball B being checked
+ * @param {int} time current timestamp
+ * @param {Array} gizmos gizmos array
  * @param {boolean} debug true if debugging
  * 
  * @returns true if collided
  */
-export function ballCollision(screen, a, b, debug=false) {
+export function ballCollision(screen, a, b, time, gizmos, debug=false) {
     // Difference vector
     let d = b.pos.sub(a.pos)
 
@@ -162,20 +170,13 @@ export function ballCollision(screen, a, b, debug=false) {
         let va = na.scale(-sf.x).add(wa)
         let vb = nb.scale(-sf.y).add(wb)
 
-        // Debug draw ray
+        // Debug collision
         if (debug) {
-            // Collision normal line
-            screen.drawLine(a.pos, b.pos, '#000000')
-
-            // Ball A info rays
-            screen.drawRay(a.pos, a.vel.unit, a.rad, '#ff0000') // Velocity
-            screen.drawRay(a.pos, wa.unit, a.rad, '#0000ff')    // Reflection line
-            screen.drawRay(a.pos, va.unit, a.rad, '#00ff00', 3) // New Velocity
-
-            // Ball B info rays
-            screen.drawRay(b.pos, b.vel.unit, b.rad, '#ff0000') // Velocity
-            screen.drawRay(b.pos, wb.unit, b.rad, '#0000ff')    // Reflection line
-            screen.drawRay(b.pos, vb.unit, b.rad, '#00ff00', 3) // New Velocity
+            gizmos.push(
+                new LineGizmo(time + 1*SECONDS, a.pos, b.pos),
+                new CollisionGizmo(time + 1*SECONDS, a.pos, a.vel, ua.scale(-1), va),
+                new CollisionGizmo(time + 1*SECONDS, b.pos, b.vel, ub.scale(-1), vb)
+            )
         }
 
         // Set velocities
