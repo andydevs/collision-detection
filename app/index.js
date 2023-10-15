@@ -36,7 +36,7 @@ function genearateBalls(number, bias) {
         let ball = new Ball(
             Vector.random(-300, 300, -300, 300),
             Vector.random(-5, 5, -5, 5),
-            randomWithBias(5, 20, bias, 0),
+            randomWithBias(5, 30, bias, 0),
             ballColors[i % ballColors.length]
         )
         console.log(ball)
