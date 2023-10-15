@@ -34,3 +34,16 @@ export class LineGizmo extends Gizmo {
         screen.drawLine(this.start, this.end, '#bbbbbb')
     }
 }
+
+export class CircleGizmo extends Gizmo {
+    constructor(expires, pos, radius, color='white') {
+        super(expires)
+        this.pos = pos
+        this.radius = radius
+        this.color = color
+    }
+
+    draw(screen) {
+        screen.drawCircle(this.pos, this.radius, this.color)
+    }
+}

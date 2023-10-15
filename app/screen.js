@@ -5,6 +5,7 @@
  * Created: 4 - 30 - 2021
  */
 import Vector from './vector'
+import { Boundary } from './physics'
 
 export default class Screen {
     constructor(ctx) {
@@ -25,6 +26,15 @@ export default class Screen {
 
     get H() {
         return this.ctx.canvas.height;
+    }
+
+    get boundaries() {
+        return [
+            new Boundary(new Vector(0, this.Y), new Vector(0, -1)),
+            new Boundary(new Vector(0, -this.Y), new Vector(0, 1)),
+            new Boundary(new Vector(this.X, 0), new Vector(-1, 0)),
+            new Boundary(new Vector(-this.X, 0), new Vector(1, 0))
+        ]
     }
 
     centered(r) {
