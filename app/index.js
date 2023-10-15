@@ -10,8 +10,7 @@ import { Ball, Boundary, boundaryCollision, ballCollision } from './physics'
 import Screen from './screen'
 
 // Parameters
-let DEBUG_INITIALIZATION = true
-let DEBUG_COLLISIONS = true
+let DEBUG_INITIALIZATION = false
 
 // Create a screen
 let canvas = document.getElementById('canvas')
@@ -87,6 +86,9 @@ var {
  * Runs each animation loop
  */
 requestAnimationFrame(function loop() {
+    // Debug systems
+    let DEBUG_COLLISIONS = document.querySelector('#show-collision').checked
+
     // Current time
     let time = Date.now()
 
