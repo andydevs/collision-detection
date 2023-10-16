@@ -1,4 +1,5 @@
 import Vector from "./vector"
+import { numberRange, permutations, linearBreaks } from './array';
 
 /**
  * Collision detection
@@ -30,5 +31,20 @@ export class Rect {
     get center() {
         let { x0, x1, y0, y1 } = this
         return new Vector((x0+x1)/2, (y0+y1)/2)
+    }
+
+    partition(columns, rows) {
+        let columnBreaks = linearBreaks(this.x0, this.x1, columns + 1)
+        let rowBreaks = linearBreaks(this.y0, this.y1, rows + 1)
+        return permutations(
+                numberRange(columnBreaks.length - 1),
+                numberRange(rowBreaks.length - 1)
+            )
+            .map(([i, j]) => new Rect(
+                columnBreaks[i],
+                columnBreaks[i + 1],
+                rowBreaks[j],
+                rowBreaks[j + 1]
+            ))
     }
 }

@@ -5,6 +5,7 @@
  * Created: 4 - 30 - 2021
  */
 import Vector from './vector'
+import { Rect } from './rect';
 
 /**
  * Static boundary
@@ -22,6 +23,9 @@ export class Boundary {
     }
 }
 
+/**
+ * Render to screen
+ */
 export default class Screen {
     constructor(ctx) {
         this.ctx = ctx
@@ -50,6 +54,13 @@ export default class Screen {
             new Boundary(new Vector(this.X, 0), new Vector(-1, 0)),
             new Boundary(new Vector(-this.X, 0), new Vector(1, 0))
         ]
+    }
+
+    get worldRect() {
+        return new Rect(
+            -this.X, this.X,
+            -this.Y, this.Y
+        )
     }
 
     centered(r) {

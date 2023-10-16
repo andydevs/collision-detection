@@ -47,18 +47,7 @@ export function evenPartitioningGrid(rows, columns) {
      */
     return function evenPartitioning(screen, balls, time, gizmos, debug=false) {
         // Create cells
-        let columnBreaks = linearBreaks(-screen.X, screen.X, columns + 1)
-        let rowBreaks = linearBreaks(-screen.Y, screen.Y, rows + 1)
-        let cells = permutations(
-                numberRange(columnBreaks.length - 1),
-                numberRange(rowBreaks.length - 1)
-            )
-            .map(([i, j]) => new Rect(
-                columnBreaks[i],
-                columnBreaks[i + 1],
-                rowBreaks[j],
-                rowBreaks[j + 1]
-            ))
+        let cells = screen.worldRect.partition(columns, rows)
         if (debug) {
             gizmos.push(...cells.map(cell =>
                 new RectGizmo(time + 10, cell)    
@@ -66,19 +55,11 @@ export function evenPartitioningGrid(rows, columns) {
         }
 
         // Find partitions
-        let partitions = cells.map(cell => ({ cell,
-            balls: balls.filter(ball => ball.boundingBox.overlaps(cell))
-        }))
-        if (debug) {
-            gizmos.push(...partitions.map(({ cell, balls }) =>
-                new CircleGizmo(time + 10,
-                    cell.center,
-                    balls.length * 2,
-                    balls.length > 1 ? '#544' : '#444')
-            ))
-        }
-        return partitions.flatMap(({ balls }) =>
-            uniquePairs(balls)
+        return cells.flatMap(cell =>
+            uniquePairs(
+                balls.filter(ball => 
+                    ball.boundingBox.overlaps(cell))
+            )
         )
     }
 }
