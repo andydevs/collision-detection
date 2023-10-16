@@ -8,14 +8,22 @@ import './style/main.scss'
 import { Ball } from './geometry'
 import Vector, { randomWithBias } from './vector'
 import { boundaryCollision, ballCollision } from './physics'
-import { evenPartitioningGrid, noPartitioning } from './partitioning'
+import { dynamicGridPartitioning, evenPartitioningGrid, noPartitioning } from './partitioning'
 import Screen from './screen'
 import { LineGizmo } from './gizmos'
+import { Controls } from './controls';
+import { Clock } from './clock';
 
-// Create a screen
+// Create a screen and controls
 let canvas = document.getElementById('canvas')
 let ctx = canvas.getContext('2d')
 let screen = new Screen(ctx)
+let controls = new Controls()
+let clock = new Clock()
+
+// Initialize game environments
+let gizmos = []
+let balls = []
 
 /**
  * Initialize balls and boundaries
@@ -45,52 +53,36 @@ function genearateBalls(number, bias) {
     console.groupEnd()
     return balls
 }
-
-// Initialize
-let gizmos = []
-let balls = []
-function generateSubmit() {
+controls.onGenerate(() => {
     let numberOfBalls = parseInt(document.querySelector('#number-balls').value)
     let sizeBias = parseFloat(document.querySelector('#size-bias').value)
     balls = genearateBalls(numberOfBalls, sizeBias)
-}
-document.querySelector('#generate-balls').onclick = generateSubmit
-generateSubmit()
-
-// Partitioning algorithms
-let partitioning = {
-    'none': noPartitioning,
-    'even-grid-3-5': evenPartitioningGrid(3, 5),
-    'even-grid-6-10': evenPartitioningGrid(6, 10)
-}
+})
 
 // Timing
-var last = null
-var time = Date.now()
 
 // Update render time on an interval
 setInterval(() => {
-    let delta = time - last
-    let framerate = Math.round(1000/delta)
-    document.querySelector('#delta').innerHTML = `${delta}ms`
-    document.querySelector('#framerate').innerHTML = `${framerate}`
+    controls.frameDelta = clock.delta
+    controls.framerate = clock.framerate
 }, 1000)
 
 /**
  * Runs each animation loop
  */
 requestAnimationFrame(function loop() {
-    // Current time
-    last = time
-    time = Date.now()
-
-    // Debug flags
-    let DEBUG_COLLISIONS = document.querySelector('#show-collision').checked
-    let DEBUG_PARTITIONING = document.querySelector('#show-partitions').checked
-
-    // Partitioning selection
-    let partSelection = document.querySelector('#partition-type').value
-    let partitionFunc = partitioning[partSelection]
+    // Environment and controls
+    clock.tick()
+    let DEBUG_COLLISIONS = controls.showCollisions
+    let DEBUG_PARTITIONING = controls.showPartitions
+    let partitionFuncs = {
+        'none': noPartitioning,
+        'even-grid-3-5': evenPartitioningGrid(3, 5),
+        'even-grid-6-10': evenPartitioningGrid(6, 10),
+        'dynamic-grid': dynamicGridPartitioning
+    }
+    let partSelection = controls.partitionType
+    let partitionFunc = partitionFuncs[partSelection]
 
     // Physics update step
     for (let ball of balls) { ball.update() }
@@ -98,22 +90,22 @@ requestAnimationFrame(function loop() {
     // Boundary collision detection
     for (const ball of balls) {
         for (const boundary of screen.boundaries) {
-            boundaryCollision(screen, boundary, ball, time, gizmos, DEBUG_COLLISIONS)
+            boundaryCollision(screen, boundary, ball, clock.time, gizmos, DEBUG_COLLISIONS)
         }
     }
     
     // Partition type
-    let collisions = partitionFunc(screen, balls, time, gizmos, DEBUG_PARTITIONING)
+    let collisions = partitionFunc(screen, balls, clock.time, gizmos, DEBUG_PARTITIONING)
     for (const [a, b] of collisions) {
         if (DEBUG_PARTITIONING) {
-            gizmos.push(new LineGizmo(time + 10, a.pos, b.pos))
+            gizmos.push(new LineGizmo(clock.time + 10, a.pos, b.pos))
         }
-        ballCollision(screen, a, b, time, gizmos, DEBUG_COLLISIONS)
+        ballCollision(screen, a, b, clock.time, gizmos, DEBUG_COLLISIONS)
     }
 
     // Render step
     screen.clear()
-    gizmos = gizmos.filter(g => time < g.expires)
+    gizmos = gizmos.filter(g => clock.time < g.expires)
     for (const gizmo of gizmos) {
         gizmo.draw(screen)
     }
