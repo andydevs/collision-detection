@@ -1,3 +1,9 @@
+/**
+ * Collision detection
+ * 
+ * Author:  Anshul Kharbanda
+ * Created: 4 - 30 - 2021
+ */
 export class Gizmo {
     constructor(expires) {
         this.expires = expires
@@ -45,5 +51,17 @@ export class CircleGizmo extends Gizmo {
 
     draw(screen) {
         screen.drawCircle(this.pos, this.radius, this.color)
+    }
+}
+
+export class RectGizmo extends Gizmo {
+    constructor(expires, rect, color='white') {
+        super(expires)
+        this.rect = rect
+        this.color = color
+    }
+
+    draw(screen) {
+        screen.drawRect(this.rect, this.color)
     }
 }

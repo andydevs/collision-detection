@@ -1,3 +1,9 @@
+/**
+ * Collision detection
+ * 
+ * Author:  Anshul Kharbanda
+ * Created: 4 - 30 - 2021
+ */
 import { Rect } from './rect'
 
 /**

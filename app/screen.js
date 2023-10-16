@@ -88,9 +88,9 @@ export default class Screen {
         this.ctx.fill()
     }
 
-    drawBoundaryBox(pos1, pos2, color='#aaaaaa') {
-        let c1 = this.centered(pos1)
-        let c2 = this.centered(pos2)
+    drawRect(rect, color='#aaaaaa') {
+        let c1 = this.centered(rect.pos0)
+        let c2 = this.centered(rect.pos1)
         this.ctx.strokeStyle = color
         this.ctx.lineWidth = 1
         this.ctx.beginPath()

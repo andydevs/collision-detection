@@ -1,18 +1,12 @@
-import { CircleGizmo, LineGizmo } from "./gizmos";
-import { Rect } from "./rect";
-import Vector from "./vector";
-
 /**
- * Generate pairs of items so that no to items 
- * appear more than once as a pair in either order
+ * Collision detection
  * 
- * @param {Array} items items to pair up
- * 
- * @returns unique pairs of items
+ * Author:  Anshul Kharbanda
+ * Created: 4 - 30 - 2021
  */
-function uniquePairs(items) {
-    return items.flatMap((a, i) => items.slice(i+1).map(b => [a, b]))
-}
+import { CircleGizmo, RectGizmo } from "./gizmos";
+import { Rect } from "./rect";
+import { uniquePairs, numberRange, permutations, linearBreaks } from './array';
 
 /**
  * Do not perform any partitioning and return 
@@ -52,49 +46,58 @@ export function evenPartitioningGrid(rows, columns) {
      * @returns collision pairs
      */
     return function evenPartitioning(screen, balls, time, gizmos, debug=false) {
-        // Create breakpoints
-        let createBreakpoints = (divisor, length, shifted) =>
-            Array.from({ length: divisor + 1 }, 
-                (_, i) => i*length/divisor - shifted)
-        let columnBreaks = createBreakpoints(columns, screen.W, screen.X)
-        let rowBreaks = createBreakpoints(rows, screen.H, screen.Y)
-
-        // Add gizmos
+        // Create cells
+        let columnBreaks = linearBreaks(-screen.X, screen.X, columns + 1)
+        let rowBreaks = linearBreaks(-screen.Y, screen.Y, rows + 1)
+        let cells = permutations(
+                numberRange(columnBreaks.length - 1),
+                numberRange(rowBreaks.length - 1)
+            )
+            .map(([i, j]) => new Rect(
+                columnBreaks[i],
+                columnBreaks[i + 1],
+                rowBreaks[j],
+                rowBreaks[j + 1]
+            ))
         if (debug) {
-            gizmos.push(...columnBreaks.map(brk => 
-                new LineGizmo(time + 10, 
-                    new Vector(brk, -screen.Y), 
-                    new Vector(brk, screen.Y))))
-            gizmos.push(...rowBreaks.map(brk =>
-                new LineGizmo(time + 10,
-                    new Vector(-screen.X, brk),
-                    new Vector(screen.X, brk))))
+            gizmos.push(...cells.map(cell =>
+                new RectGizmo(time + 10, cell)    
+            ))
         }
 
-        // Bins
-        let pairs = []
-        for (let i = 0; i < columnBreaks.length - 1; ++i) {
-            for (let j = 0; j < rowBreaks.length - 1; ++j) {
-                let cell = new Rect(
-                    columnBreaks[i],
-                    columnBreaks[i + 1],
-                    rowBreaks[j],
-                    rowBreaks[j + 1]
-                )
-                let contents = balls.filter(ball => 
-                    ball.boundingBox.overlaps(cell))
-                if (debug) {
-                    let { x0, x1, y0, y1 } = cell
-                    gizmos.push(new CircleGizmo(time + 10,
-                        new Vector((x0+x1)/2, (y0+y1)/2),
-                        contents.length * 2,
-                        contents.length > 1 ? '#544' : '#444'))
-                }
-                pairs.push(...uniquePairs(contents))
-            }
+        // Find partitions
+        let partitions = cells.map(cell => ({ cell,
+            balls: balls.filter(ball => ball.boundingBox.overlaps(cell))
+        }))
+        if (debug) {
+            gizmos.push(...partitions.map(({ cell, balls }) =>
+                new CircleGizmo(time + 10,
+                    cell.center,
+                    balls.length * 2,
+                    balls.length > 1 ? '#544' : '#444')
+            ))
         }
-
-        // Return list of possible collisions
-        return pairs
+        return partitions.flatMap(({ balls }) =>
+            uniquePairs(balls)
+        )
     }
+}
+
+
+/**
+ * Generate a dynamic grid and find collisions
+ * 
+ * @param {Screen} screen screen being mapped over
+ * @param {Array} balls balls to find collision checks on
+ * @param {int} time current time in ms
+ * @param {Array} gizmos gizmos arrays
+ * @param {boolean} debug print debug information
+ * 
+ * @returns collision pairs
+ */
+export function dynamicGridPartitioning(screen, balls, time, gizmos, debug=false) {
+    
+
+    // No pairs
+    return []
 }
