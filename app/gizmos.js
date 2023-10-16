@@ -10,34 +10,40 @@ export class Gizmo {
     }
 
     draw(screen) {}
+
+    stillvalid(clock) {
+        return clock.time < this.expires
+    }
 }
 
-export class CollisionGizmo extends Gizmo {
-    constructor(expires, position, incomingVelocity, reflectionLine, outgoingVelocity, radius=20) {
+export class RayGizmo extends Gizmo {
+    constructor(expires, pos, dir, rad, color='white', linewidth=1) {
         super(expires)
-        this.radius = radius
-        this.position = position
-        this.incomingVelocity = incomingVelocity
-        this.outgoingVelocity = outgoingVelocity
-        this.reflectionLine = reflectionLine
+        this.position = pos
+        this.direction = dir
+        this.radius = rad
+        this.color = color
+        this.linewidth = linewidth
     }
 
     draw(screen) {
-        screen.drawRay(this.position, this.incomingVelocity.unit, this.radius, '#f44') // Incoming velocity
-        screen.drawRay(this.position, this.reflectionLine.unit, this.radius, '#44f')      // Reflection line
-        screen.drawRay(this.position, this.outgoingVelocity.unit, this.radius, '#3f3', 1)    // New Velocity
+        screen.drawRay(this.position, 
+            this.direction.unit, this.radius, 
+            this.color, this.linewidth)
     }
 }
 
 export class LineGizmo extends Gizmo {
-    constructor(expires, start, end) {
+    constructor(expires, start, end, color='white', linewidth=1) {
         super(expires)
         this.start = start
         this.end = end
+        this.color = color
+        this.linewidth = linewidth
     }
 
     draw(screen) {
-        screen.drawLine(this.start, this.end, '#bbbbbb')
+        screen.drawLine(this.start, this.end, this.color)
     }
 }
 

@@ -105,11 +105,9 @@ requestAnimationFrame(function loop() {
 
     // Render step
     screen.clear()
-    gizmos = gizmos.filter(g => clock.time < g.expires)
-    for (const gizmo of gizmos) {
-        gizmo.draw(screen)
-    }
-    for (const ball of balls) { ball.draw(screen) }
+    gizmos = gizmos.filter(g => g.stillvalid(clock))
+    gizmos.forEach(gizmo => gizmo.draw(screen))
+    balls.forEach(ball => ball.draw(screen))
 
     // Reloop
     requestAnimationFrame(loop)

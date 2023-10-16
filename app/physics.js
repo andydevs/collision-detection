@@ -6,7 +6,7 @@
  */
 import Vector from './vector'
 import Matrix from './matrix'
-import { CollisionGizmo, LineGizmo } from './gizmos'
+import { LineGizmo, RayGizmo } from './gizmos'
 
 // Time constants
 const SECONDS = 1000
@@ -38,19 +38,33 @@ export function boundaryCollision(screen, boundary, ball, time, gizmos, debug=fa
         ball.pos = ball.pos.add(boundary.norm.scale(correction))
         
         // Velocity reflection
-        let uVf = boundary.norm.scale(ball.vel.dot(boundary.norm))
-        let vVf = ball.vel.sub(uVf)
-        let vf = vVf.sub(uVf)
+        let vNormal = boundary.norm.scale(ball.vel.dot(boundary.norm))
+        let vParallel = ball.vel.sub(vNormal)
+        let vFinal = vParallel.sub(vNormal)
         
         // Debug collision
         if (debug) {
+            // Line radius
+            let radius = 20
+            let linewidth = 3
+
+            // Add gizmos
             gizmos.push(
-                new CollisionGizmo(time + 1*SECONDS, ball.pos, ball.vel, uVf.scale(-1), vf)
+                new RayGizmo(time + 1*SECONDS,
+                    ball.pos.sub(boundary.norm.scale(ball.rad)), 
+                    ball.vel.scale(-1), radius,
+                    '#f00', linewidth
+                ),
+                new RayGizmo(time + 1*SECONDS,
+                    ball.pos.sub(boundary.norm.scale(ball.rad)), 
+                    vFinal, radius,
+                    '#0f0', linewidth
+                )
             )
         }
 
         // Update velocity
-        ball.vel = vf
+        ball.vel = vFinal
         
         // Ball has collided
         return true
@@ -93,7 +107,7 @@ export function ballCollision(screen, a, b, time, gizmos, debug=false) {
         let ua = na.scale(a.vel.dot(na))
         let ub = nb.scale(b.vel.dot(nb))
 
-        // Get other components of velocity off normal
+        // Get other components of velocity on parallel
         let wa = a.vel.sub(ua)
         let wb = b.vel.sub(ub)
 
@@ -114,10 +128,40 @@ export function ballCollision(screen, a, b, time, gizmos, debug=false) {
 
         // Debug collision
         if (debug) {
+            // Line radius
+            let radius = 20
+            let linewidth = 3
+
+            // Center 
+            let center = a.pos.add(b.pos).scale(0.5)
+            let isa = a.vel.magnitude / b.vel.magnitude
+            let fsa = va.magnitude / vb.magnitude
+            let isb = b.vel.magnitude / a.vel.magnitude
+            let fsb = vb.magnitude / va.magnitude
+
+            // Add gizmos
             gizmos.push(
-                new LineGizmo(time + 1*SECONDS, a.pos, b.pos),
-                new CollisionGizmo(time + 1*SECONDS, a.pos, a.vel, ua.scale(-1), va),
-                new CollisionGizmo(time + 1*SECONDS, b.pos, b.vel, ub.scale(-1), vb)
+                new LineGizmo(time + 1*SECONDS,
+                    center.sub(wa.unit.scale(radius)),
+                    center.add(wa.unit.scale(radius)),
+                    '#0af', linewidth
+                ),
+                new RayGizmo(time + 1*SECONDS,
+                    center, a.vel.scale(-1), radius*isa,
+                    '#f00', linewidth
+                ),
+                new RayGizmo(time + 1*SECONDS,
+                    center, va, radius*fsa,
+                    '#0f0', linewidth
+                ),
+                new RayGizmo(time + 1*SECONDS,
+                    center, b.vel.scale(-1), radius*isb,
+                    '#f00', linewidth
+                ),
+                new RayGizmo(time + 1*SECONDS,
+                    center, vb, radius*fsb,
+                    '#0f0', linewidth
+                ),
             )
         }
 
