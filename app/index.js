@@ -8,7 +8,7 @@ import './style/main.scss'
 import { Ball } from './geometry'
 import Vector, { randomWithBias } from './vector'
 import { boundaryCollision, ballCollision } from './physics'
-import { dynamicGridPartitioning, evenPartitioningGrid, noPartitioning } from './partitioning'
+import { dynamicPartitioningGrid, staticPartitioningGrid, noPartitioning } from './partitioning'
 import Screen from './screen'
 import { LineGizmo } from './gizmos'
 import { Controls } from './controls';
@@ -77,9 +77,10 @@ requestAnimationFrame(function loop() {
     let DEBUG_PARTITIONING = controls.showPartitions
     let partitionFuncs = {
         'none': noPartitioning,
-        'even-grid-3-5': evenPartitioningGrid(3, 5),
-        'even-grid-6-10': evenPartitioningGrid(6, 10),
-        'dynamic-grid': dynamicGridPartitioning
+        'even-grid-3-5': staticPartitioningGrid(3, 5),
+        'even-grid-6-10': staticPartitioningGrid(6, 10),
+        'dynamic-grid-2-2': dynamicPartitioningGrid(2, 2),
+        'dynamic-grid-3-2': dynamicPartitioningGrid(3, 2)
     }
     let partSelection = controls.partitionType
     let partitionFunc = partitionFuncs[partSelection]

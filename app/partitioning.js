@@ -4,9 +4,8 @@
  * Author:  Anshul Kharbanda
  * Created: 4 - 30 - 2021
  */
-import { CircleGizmo, RectGizmo } from "./gizmos";
-import { Rect } from "./rect";
-import { uniquePairs, numberRange, permutations, linearBreaks } from './array';
+import { RectGizmo } from "./gizmos";
+import { uniquePairs } from './array';
 
 /**
  * Do not perform any partitioning and return 
@@ -25,15 +24,15 @@ export function noPartitioning(screen, balls, time, gizmos, debug=false) {
 }
 
 /**
- * Generate an even partitioning algorithm which partitions
+ * Generate an static partitioning algorithm which partitions
  * balls based on their loose position in a static grid
  * 
- * @param {int} rows rows in grid
  * @param {int} columns columns in grid
+ * @param {int} rows rows in grid
  * 
  * @returns Partition function in grid
  */
-export function evenPartitioningGrid(rows, columns) {
+export function staticPartitioningGrid(rows, columns) {
     /**
      * Partition particles based on their positions in the static grid
      * 
@@ -45,7 +44,7 @@ export function evenPartitioningGrid(rows, columns) {
      * 
      * @returns collision pairs
      */
-    return function evenPartitioning(screen, balls, time, gizmos, debug=false) {
+    return function staticPartitioning(screen, balls, time, gizmos, debug=false) {
         // Create cells
         let cells = screen.worldRect.partition(columns, rows)
         if (debug) {
@@ -66,19 +65,48 @@ export function evenPartitioningGrid(rows, columns) {
 
 
 /**
- * Generate a dynamic grid and find collisions
+ * Generate a dynamic partitioning algorithm which partitions
+ * balls based on their loose position in a dynamically allocated grid
  * 
- * @param {Screen} screen screen being mapped over
- * @param {Array} balls balls to find collision checks on
- * @param {int} time current time in ms
- * @param {Array} gizmos gizmos arrays
- * @param {boolean} debug print debug information
+ * @param {int} columnFactor column number to subdivide cell by
+ * @param {int} rowFactor row number to subdivide cell by
+ * @param {int} maxStack maximum stack to recurse into
  * 
- * @returns collision pairs
+ * @returns partition function for dynamic grid
  */
-export function dynamicGridPartitioning(screen, balls, time, gizmos, debug=false) {
-    
+export function dynamicPartitioningGrid(columnFactor, rowFactor, maxStack=5) {
+    /**
+     * Generate a dynamic grid and find collisions
+     * 
+     * @param {Screen} screen screen being mapped over
+     * @param {Array} balls balls to find collision checks on
+     * @param {int} time current time in ms
+     * @param {Array} gizmos gizmos arrays
+     * @param {boolean} debug print debug information
+     * 
+     * @returns collision pairs
+     */
+    return function dynamicPartitioning(screen, balls, time, gizmos, debug=false) {
+        let recursivePartition = (balls, root, colF=columnFactor, rowF=rowFactor, maxStack=5) => {
+            // Base conditions
+            if (balls.length < 2) { return [] }
+            if (balls.length === 2 || maxStack === 0) { return [{ u: balls }] }
 
-    // No pairs
-    return []
+            // Partition cells
+            let cells = root.partition(colF, rowF)
+            if (debug) {
+                gizmos.push(...cells.map(cell =>
+                    new RectGizmo(time + 10, cell)    
+                ))
+            }
+
+            // Subdivide partitions
+            return cells.flatMap(cell =>
+                recursivePartition(
+                    balls.filter(ball => ball.boundingBox.overlaps(cell)),
+                    cell, rowF, colF, maxStack - 1)
+            )
+        }
+        return recursivePartition(balls, screen.worldRect).map(({u}) => u)
+    }
 }
