@@ -7,11 +7,12 @@
 
 export class Controls {
     constructor() {
+        this._frameDeltaEntry = document.querySelector('#delta')
+        this._framerateEntry = document.querySelector('#framerate')
+        this._cpsEntry = document.querySelector('#cps')
         this._numberBalls = document.querySelector('#number-balls')
         this._sizeBias = document.querySelector('#size-bias')
         this._generateButton = document.querySelector('#generate-balls')
-        this._frameDeltaEntry = document.querySelector('#delta')
-        this._framerateEntry = document.querySelector('#framerate')
         this._collisionCheck = document.querySelector('#show-collision')
         this._partitionCheck = document.querySelector('#show-partitions')
         this._partitionType = document.querySelector('#partition-type')
@@ -43,6 +44,10 @@ export class Controls {
 
     set framerate(value) {
         this._framerateEntry.innerHTML = `${value}`
+    }
+
+    set cps(value) {
+        this._cpsEntry.innerHTML = `${value}`
     }
 
     onGenerate(callback) {

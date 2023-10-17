@@ -49,7 +49,7 @@ export function staticPartitioningGrid(rows, columns) {
         let cells = screen.worldRect.partition(columns, rows)
         if (debug) {
             gizmos.push(...cells.map(cell =>
-                new RectGizmo(time + 10, cell)    
+                new RectGizmo(time + 10, cell, '#999')    
             ))
         }
 
@@ -87,16 +87,16 @@ export function dynamicPartitioningGrid(columnFactor, rowFactor, maxStack=5) {
      * @returns collision pairs
      */
     return function dynamicPartitioning(screen, balls, time, gizmos, debug=false) {
-        let recursivePartition = (balls, root, colF=columnFactor, rowF=rowFactor, maxStack=5) => {
+        let recursivePartition = (balls, root, colF=columnFactor, rowF=rowFactor, stack=maxStack) => {
             // Base conditions
             if (balls.length < 2) { return [] }
-            if (balls.length === 2 || maxStack === 0) { return [{ u: balls }] }
+            if (balls.length === 2 || stack === 0) { return [{ u: balls }] }
 
             // Partition cells
             let cells = root.partition(colF, rowF)
             if (debug) {
                 gizmos.push(...cells.map(cell =>
-                    new RectGizmo(time + 10, cell)    
+                    new RectGizmo(time + 10, cell, '#999')    
                 ))
             }
 
@@ -104,7 +104,7 @@ export function dynamicPartitioningGrid(columnFactor, rowFactor, maxStack=5) {
             return cells.flatMap(cell =>
                 recursivePartition(
                     balls.filter(ball => ball.boundingBox.overlaps(cell)),
-                    cell, rowF, colF, maxStack - 1)
+                    cell, rowF, colF, stack - 1)
             )
         }
         return recursivePartition(balls, screen.worldRect).map(({u}) => u)

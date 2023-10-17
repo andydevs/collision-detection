@@ -59,12 +59,18 @@ controls.onGenerate(() => {
     balls = genearateBalls(numberOfBalls, sizeBias)
 })
 
-// Timing
+// Buffer to hold current collision checks
+let collisions
 
 // Update render time on an interval
 setInterval(() => {
+    // Update frame stats
     controls.frameDelta = clock.delta
     controls.framerate = clock.framerate
+
+    // Update collision stats
+    controls.cps = balls.length*screen.boundaries.length
+                + collisions.length
 }, 1000)
 
 /**
@@ -95,8 +101,12 @@ requestAnimationFrame(function loop() {
         }
     }
     
-    // Partition type
-    let collisions = partitionFunc(screen, balls, clock.time, gizmos, DEBUG_PARTITIONING)
+    // Use partition algorithm to get possible collision checks
+    collisions = partitionFunc(screen, 
+        balls, clock.time, 
+        gizmos, DEBUG_PARTITIONING)
+
+    // Check collisions
     for (const [a, b] of collisions) {
         if (DEBUG_PARTITIONING) {
             gizmos.push(new LineGizmo(clock.time + 10, a.pos, b.pos))
