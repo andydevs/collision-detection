@@ -60,7 +60,7 @@ controls.onGenerate(() => {
 })
 
 // Buffer to hold current collision checks
-let collisions
+let collisions = []
 
 // Update render time on an interval
 setInterval(() => {
