@@ -11,7 +11,6 @@ Technology
 |:-----------|:---------------|
 | Compiling  | Webpack        |
 | Developing | Webpack        |
-| Testing    | Cypress        |
 | JavaScript | Babel          |
 | CSS        | SCSS           |
 | Hosting    | GitHub Pages   |

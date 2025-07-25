@@ -14,10 +14,7 @@
   "private": true,
   "scripts": {
     "build": "webpack",
-    "start": "webpack serve",
-    "test": "start-server-and-test start http-get://localhost:3000 cy:run",
-    "cy:open": "cypress open",
-    "cy:run": "cypress run"
+    "start": "webpack serve"
   },
   "repository": {
     "type": "git",
@@ -32,7 +29,6 @@
     "@babel/preset-env": "^7.12.1",
     "babel-loader": "^8.1.0",
     "css-loader": "^5.0.1",
-    "cypress": "^13.3.1",
     "file-loader": "^6.2.0",
     "node-sass": "^9.0.0",
     "sass-loader": "^13.3.2",
