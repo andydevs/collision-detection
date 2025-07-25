@@ -4,8 +4,9 @@
  * Author:  Anshul Kharbanda
  * Created: [Creation Date]
  */
-const webpack = require('webpack')
+const { ProvidePlugin } = require('webpack')
 const path = require('path')
+const HtmlWebpackPlugin = require('html-webpack-plugin')
 
 // Build directory
 const buildDir = 'public'
@@ -25,6 +26,7 @@ module.exports = {
             directory: path.join(__dirname, buildDir),
             publicPath: '/'
         },
+        open: true,
         compress: true,
         port: 3000
     },
@@ -57,8 +59,12 @@ module.exports = {
         ]
     },
     plugins: [
-        new webpack.ProvidePlugin({
+        new ProvidePlugin({
             regeneratorRuntime: 'regenerator-runtime'
+        }),
+        new HtmlWebpackPlugin({
+            title: 'Collision Detection',
+            template: 'index.html'
         })
     ]
 }

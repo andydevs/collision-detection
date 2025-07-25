@@ -4,9 +4,9 @@
  * Author:  Anshul Kharbanda
  * Created: 4 - 30 - 2021
  */
-import Vector from './vector'
-import Matrix from './matrix'
-import { LineGizmo, RayGizmo } from './gizmos'
+import Vector from '../math/vector'
+import Matrix from '../math/matrix'
+import { LineGizmo, RayGizmo } from '../ui/gizmos'
 
 // Time constants
 const SECONDS = 1000
@@ -46,14 +46,14 @@ export function boundaryCollision(screen, boundary, ball, time, gizmos, debug=fa
         if (debug) {
             // Line radius
             let radius = 20
-            let linewidth = 3
+            let linewidth = 1
 
             // Add gizmos
             gizmos.push(
                 new RayGizmo(time + 1*SECONDS,
                     ball.pos.sub(boundary.norm.scale(ball.rad)), 
                     ball.vel.scale(-1), radius,
-                    '#f00', linewidth
+                    '#0f0', linewidth
                 ),
                 new RayGizmo(time + 1*SECONDS,
                     ball.pos.sub(boundary.norm.scale(ball.rad)), 
@@ -90,86 +90,91 @@ export function boundaryCollision(screen, boundary, ball, time, gizmos, debug=fa
  */
 export function ballCollision(screen, a, b, time, gizmos, debug=false) {
     // Difference vector
-    let d = b.pos.sub(a.pos)
+    let vectorDifferenceBetweenBalls = b.pos.sub(a.pos)
 
     // If distance is greater than both radii
-    if (d.magnitude < (a.rad + b.rad)) {
+    if (vectorDifferenceBetweenBalls.magnitude < (a.rad + b.rad)) {
         // First find the collision normals
-        let na = d.unit
-        let nb = na.scale(-1)
+        let collisionNormal = vectorDifferenceBetweenBalls.unit
+        let collisionAntinormal = collisionNormal.scale(-1)
 
         // Correction translation
-        let corr = ((a.rad + b.rad) - d.magnitude)/2
-        let pa = a.pos.add(nb.scale(corr))
-        let pb = b.pos.add(na.scale(corr))
+        let intersectionCorrectionFactor = ((a.rad + b.rad) - vectorDifferenceBetweenBalls.magnitude)/2
+        let aCorrectedPosition = a.pos
+            .add(collisionAntinormal.scale(intersectionCorrectionFactor))
+        let bCorrectedPosition = b.pos
+            .add(collisionNormal.scale(intersectionCorrectionFactor))
 
         // Find projections of velocity on normal
-        let ua = na.scale(a.vel.dot(na))
-        let ub = nb.scale(b.vel.dot(nb))
+        let aPreCollisionNormalVelocity = collisionNormal
+            .scale(a.vel.dot(collisionNormal))
+        let bPreCollisionAntinormalVelocity = collisionAntinormal
+            .scale(b.vel.dot(collisionAntinormal))
 
         // Get other components of velocity on parallel
-        let wa = a.vel.sub(ua)
-        let wb = b.vel.sub(ub)
+        let aParallelVelocity = a.vel.sub(aPreCollisionNormalVelocity)
+        let bParallelVelocity = b.vel.sub(bPreCollisionAntinormalVelocity)
 
         // Momentum exchange using the khan equation
-        let ma = a.mass
-        let mb = b.mass
-        let si = new Vector(
-            ua.magnitude,
-            ub.magnitude
+        let preCollisionVelocityState = new Vector(
+            aPreCollisionNormalVelocity.magnitude,
+            bPreCollisionAntinormalVelocity.magnitude
         )
-        let mP = new Matrix(
-            (ma - mb), 2*mb,
-            2*ma, (mb - ma)
-        ).scale(1/(ma + mb))
-        let sf = mP.transform(si)
-        let va = na.scale(-sf.x).add(wa)
-        let vb = nb.scale(-sf.y).add(wb)
+        let khanMatrix = new Matrix(
+            (a.mass - b.mass), 2*b.mass,
+            2*a.mass, (b.mass - a.mass)
+        ).scale(1/(a.mass + b.mass))
+        let postCollisionVelocityState = khanMatrix
+            .transform(preCollisionVelocityState)
+        let aPostCollisionVelocity = collisionNormal
+            .scale(-postCollisionVelocityState.x)
+            .add(aParallelVelocity)
+        let bPostCollisionVelocity = collisionAntinormal
+            .scale(-postCollisionVelocityState.y)
+            .add(bParallelVelocity)
 
         // Debug collision
         if (debug) {
             // Line radius
+            let collisionPlaneLength = 60
             let radius = 20
-            let linewidth = 3
+            let linewidth = 1
 
-            // Center 
-            let center = a.pos.add(b.pos).scale(0.5)
-            let isa = a.vel.magnitude / b.vel.magnitude
-            let fsa = va.magnitude / vb.magnitude
-            let isb = b.vel.magnitude / a.vel.magnitude
-            let fsb = vb.magnitude / va.magnitude
+            // Collision info 
+            let collisionCenter = a.pos.add(b.pos).scale(0.5)
+            let collisionParallel = new Vector(-collisionNormal.y, collisionNormal.x)
 
             // Add gizmos
             gizmos.push(
                 new LineGizmo(time + 1*SECONDS,
-                    center.sub(wa.unit.scale(radius)),
-                    center.add(wa.unit.scale(radius)),
+                    collisionCenter.sub(collisionParallel.scale(collisionPlaneLength/2)),
+                    collisionCenter.add(collisionParallel.scale(collisionPlaneLength/2)),
                     '#0af', linewidth
                 ),
                 new RayGizmo(time + 1*SECONDS,
-                    center, a.vel.scale(-1), radius*isa,
-                    '#f00', linewidth
-                ),
-                new RayGizmo(time + 1*SECONDS,
-                    center, va, radius*fsa,
+                    collisionCenter, a.vel.scale(-1), radius,
                     '#0f0', linewidth
                 ),
                 new RayGizmo(time + 1*SECONDS,
-                    center, b.vel.scale(-1), radius*isb,
+                    collisionCenter, aPostCollisionVelocity, radius,
+                    '#0f0', linewidth
+                ),
+                new RayGizmo(time + 1*SECONDS,
+                    collisionCenter, b.vel.scale(-1), radius,
                     '#f00', linewidth
                 ),
                 new RayGizmo(time + 1*SECONDS,
-                    center, vb, radius*fsb,
-                    '#0f0', linewidth
+                    collisionCenter, bPostCollisionVelocity, radius,
+                    '#f00', linewidth
                 ),
             )
         }
 
         // Set velocities
-        a.pos = pa
-        a.vel = va
-        b.pos = pb
-        b.vel = vb
+        a.pos = aCorrectedPosition
+        a.vel = aPostCollisionVelocity
+        b.pos = bCorrectedPosition
+        b.vel = bPostCollisionVelocity
 
         // Return true because the ball collided
         return true

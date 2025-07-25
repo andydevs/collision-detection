@@ -1,11 +1,14 @@
-import Vector from "./vector"
-import { numberRange, permutations, linearBreaks } from './array';
-
 /**
  * Collision detection
  * 
  * Author:  Anshul Kharbanda
  * Created: 4 - 30 - 2021
+ */
+import Vector from "../math/vector"
+import { numberRange, permutations, linearBreaks } from '../math/array';
+
+/**
+ * Generic rectangle
  */
 export class Rect {
     constructor(x0, x1, y0, y1) {
