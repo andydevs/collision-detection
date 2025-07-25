@@ -14,8 +14,19 @@ import { LineGizmo } from './code/ui/gizmos'
 import { Controls, PartitionControl } from './code/ui/controls';
 import { Stats } from './code/ui/stats';
 import { Clock } from './code/clock';
+import { permutations } from './code/math/array'
 
-// Options for partitions
+// Color palette for balls
+const ballColors = [
+    'cyan', 
+    'lime', 
+    'coral',
+    'yellow', 
+    'violet', 
+    'white'
+]
+
+// Controls for updating simulation
 let partitions = new PartitionControl({
     'none': {
         display: 'No Partitioning',
@@ -38,18 +49,16 @@ let partitions = new PartitionControl({
         func: partitonTypes.dynamicPartitioningGrid(3, 2)
     }
 })
+let controls = new Controls(partitions)
 
-// Create a screen and controls
+// Simulation stats
+let stats = new Stats()
+
+// Simulation screen
 let canvas = document.getElementById('canvas')
 let ctx = canvas.getContext('2d')
 let screen = new Screen(ctx)
-let controls = new Controls(partitions)
-let stats = new Stats()
 let clock = new Clock()
-
-// Initialize game environments
-let gizmos = []
-let balls = []
 
 /**
  * Initialize balls and boundaries
@@ -61,12 +70,7 @@ let balls = []
  */
 function genearateBalls(number, bias) {
     console.groupCollapsed('genearateBalls')
-    let ballColors = [
-        'cyan', 'lime', 'coral',
-        'yellow', 'violet', 'white'
-    ]
-    let balls = []
-    for (let i = 0; i < number; i++) {
+    let balls = Array.from({ length: number}, (_,i) => {
         let ball = new Ball(
             Vector.random(-300, 300, -300, 300),
             Vector.random(-5, 5, -5, 5),
@@ -74,17 +78,22 @@ function genearateBalls(number, bias) {
             ballColors[i % ballColors.length]
         )
         console.log(ball)
-        balls.push(ball)
-    }
+        return ball
+    })
     console.groupEnd()
     return balls
 }
+
+
+// Initialize game environment stuff
+let gizmos = []
+let balls = []
 controls.onGenerate(() => {
     balls = genearateBalls(controls.numberBalls, controls.sizeBias)
 })
 
 // Buffer to hold current collision checks
-let collisions = []
+let nChecks = 0
 
 // Update render time on an interval
 setInterval(() => {
@@ -93,8 +102,7 @@ setInterval(() => {
     stats.framerate = clock.framerate
 
     // Update collision stats
-    stats.cps = balls.length*screen.boundaries.length
-                + collisions.length
+    stats.cps = balls.length * screen.boundaries.length + nChecks
 }, 1000)
 
 /**
@@ -103,32 +111,28 @@ setInterval(() => {
 requestAnimationFrame(function loop() {
     // Environment and controls
     clock.tick()
-    let DEBUG_COLLISIONS = controls.showCollisions
-    let DEBUG_PARTITIONING = controls.showPartitions
-    let partitionFunc = partitions.func
 
     // Physics update step
-    for (let ball of balls) { ball.update() }
+    balls.forEach(ball => ball.update())
     
     // Boundary collision detection
-    for (const ball of balls) {
-        for (const boundary of screen.boundaries) {
-            boundaryCollision(screen, boundary, ball, clock.time, gizmos, DEBUG_COLLISIONS)
-        }
-    }
+    permutations(balls, screen.boundaries).forEach(([ball, boundary]) => {
+        boundaryCollision(screen, boundary, ball, clock.time, gizmos, controls.showCollisions)
+    })
     
     // Use partition algorithm to get possible collision checks
-    collisions = partitionFunc(screen, 
+    let collisions = partitions.func(screen, 
         balls, clock.time, 
-        gizmos, DEBUG_PARTITIONING)
+        gizmos, controls.showPartitions)
+    nChecks = collisions.length
 
     // Check collisions
-    for (const [a, b] of collisions) {
-        if (DEBUG_PARTITIONING) {
+    collisions.forEach(([a, b]) => {
+        if (controls.showPartitions) {
             gizmos.push(new LineGizmo(clock.time + 10, a.pos, b.pos))
         }
-        ballCollision(screen, a, b, clock.time, gizmos, DEBUG_COLLISIONS)
-    }
+        ballCollision(screen, a, b, clock.time, gizmos, controls.showCollisions)
+    })
 
     // Render step
     screen.clear()
