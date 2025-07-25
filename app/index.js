@@ -5,14 +5,14 @@
  * Created: 4 - 30 - 2021
  */
 import './style/main.scss'
-import { Ball } from './geometry'
-import Vector, { randomWithBias } from './vector'
-import { boundaryCollision, ballCollision } from './physics'
-import { dynamicPartitioningGrid, staticPartitioningGrid, noPartitioning } from './partitioning'
-import Screen from './screen'
-import { LineGizmo } from './gizmos'
-import { Controls } from './controls';
-import { Clock } from './clock';
+import { Ball } from './code/geometry/ball'
+import Vector, { randomWithBias } from './code/math/vector'
+import { boundaryCollision, ballCollision } from './code/physics/collision'
+import { dynamicPartitioningGrid, staticPartitioningGrid, noPartitioning } from './code/physics/partitioning'
+import Screen from './code/ui/screen'
+import { LineGizmo } from './code/ui/gizmos'
+import { Controls } from './code/ui/controls';
+import { Clock } from './code/clock';
 
 // Create a screen and controls
 let canvas = document.getElementById('canvas')

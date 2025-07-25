@@ -1,5 +1,5 @@
-import Vector from "./vector"
-import { numberRange, permutations, linearBreaks } from './array';
+import Vector from "../math/vector"
+import { numberRange, permutations, linearBreaks } from '../math/array';
 
 /**
  * Collision detection

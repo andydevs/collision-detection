@@ -4,9 +4,9 @@
  * Author:  Anshul Kharbanda
  * Created: 4 - 30 - 2021
  */
-import Vector from './vector'
-import Matrix from './matrix'
-import { LineGizmo, RayGizmo } from './gizmos'
+import Vector from '../math/vector'
+import Matrix from '../math/matrix'
+import { LineGizmo, RayGizmo } from '../ui/gizmos'
 
 // Time constants
 const SECONDS = 1000
@@ -46,14 +46,14 @@ export function boundaryCollision(screen, boundary, ball, time, gizmos, debug=fa
         if (debug) {
             // Line radius
             let radius = 20
-            let linewidth = 3
+            let linewidth = 1
 
             // Add gizmos
             gizmos.push(
                 new RayGizmo(time + 1*SECONDS,
                     ball.pos.sub(boundary.norm.scale(ball.rad)), 
                     ball.vel.scale(-1), radius,
-                    '#f00', linewidth
+                    '#0f0', linewidth
                 ),
                 new RayGizmo(time + 1*SECONDS,
                     ball.pos.sub(boundary.norm.scale(ball.rad)), 
@@ -129,38 +129,35 @@ export function ballCollision(screen, a, b, time, gizmos, debug=false) {
         // Debug collision
         if (debug) {
             // Line radius
+            let collisionPlaneLength = 60
             let radius = 20
-            let linewidth = 3
+            let linewidth = 1
 
             // Center 
             let center = a.pos.add(b.pos).scale(0.5)
-            let isa = a.vel.magnitude / b.vel.magnitude
-            let fsa = va.magnitude / vb.magnitude
-            let isb = b.vel.magnitude / a.vel.magnitude
-            let fsb = vb.magnitude / va.magnitude
 
             // Add gizmos
             gizmos.push(
                 new LineGizmo(time + 1*SECONDS,
-                    center.sub(wa.unit.scale(radius)),
-                    center.add(wa.unit.scale(radius)),
+                    center.sub(wa.unit.scale(collisionPlaneLength/2)),
+                    center.add(wa.unit.scale(collisionPlaneLength/2)),
                     '#0af', linewidth
                 ),
                 new RayGizmo(time + 1*SECONDS,
-                    center, a.vel.scale(-1), radius*isa,
-                    '#f00', linewidth
-                ),
-                new RayGizmo(time + 1*SECONDS,
-                    center, va, radius*fsa,
+                    center, a.vel.scale(-1), radius,
                     '#0f0', linewidth
                 ),
                 new RayGizmo(time + 1*SECONDS,
-                    center, b.vel.scale(-1), radius*isb,
+                    center, va, radius,
+                    '#0f0', linewidth
+                ),
+                new RayGizmo(time + 1*SECONDS,
+                    center, b.vel.scale(-1), radius,
                     '#f00', linewidth
                 ),
                 new RayGizmo(time + 1*SECONDS,
-                    center, vb, radius*fsb,
-                    '#0f0', linewidth
+                    center, vb, radius,
+                    '#f00', linewidth
                 ),
             )
         }

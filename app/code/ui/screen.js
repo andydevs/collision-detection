@@ -4,8 +4,8 @@
  * Author:  Anshul Kharbanda
  * Created: 4 - 30 - 2021
  */
-import Vector from './vector'
-import { Rect } from './rect';
+import Vector from '../math/vector'
+import { Rect } from '../geometry/rect';
 
 /**
  * Static boundary

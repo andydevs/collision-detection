@@ -4,8 +4,8 @@
  * Author:  Anshul Kharbanda
  * Created: 4 - 30 - 2021
  */
-import { RectGizmo } from "./gizmos";
-import { uniquePairs } from './array';
+import { RectGizmo } from "../ui/gizmos";
+import { uniquePairs } from '../math/array';
 
 /**
  * Do not perform any partitioning and return 
