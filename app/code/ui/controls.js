@@ -5,16 +5,37 @@
  * Created: 4 - 30 - 2021
  */
 
+export class PartitionControl {
+    constructor(options) {
+        this._selectorElement = document.querySelector('#partition-type')
+        this._options = options
+        Object.entries(this._options).forEach(([key, { display }]) => {
+            let option = document.createElement('option')
+            option.setAttribute('value', key)
+            option.textContent = display;
+            this._selectorElement.appendChild(option)
+        })
+    }
+
+    get value() {
+        return this._selectorElement.value
+    }
+
+    get func() {
+        return this._options[this.value].func
+    }
+}
+
 export class Controls {
     static storageKey = 'addvscd-setting-state'
 
-    constructor() {
+    constructor(partitionControl) {
         this._numberBalls = document.querySelector('#number-balls')
         this._sizeBias = document.querySelector('#size-bias')
         this._generateButton = document.querySelector('#generate-balls')
         this._collisionCheck = document.querySelector('#show-collision')
         this._partitionCheck = document.querySelector('#show-partitions')
-        this._partitionType = document.querySelector('#partition-type')
+        this._partitionControl = partitionControl
 
         // Load from localstorage
         this.loadStorage()
@@ -36,7 +57,7 @@ export class Controls {
             this._sizeBias.value = savedState.sizeBias
             this._collisionCheck.checked = savedState.collisionCheck
             this._partitionCheck.checked = savedState.partitionCheck
-            this._partitionType.value = savedState.partitionType
+            this._partitionControl._selectorElement.value = savedState.partitionType
         }
         console.groupEnd()
     }
@@ -48,7 +69,7 @@ export class Controls {
             this._generateButton,
             this._collisionCheck,
             this._partitionCheck,
-            this._partitionType
+            this._partitionControl._selectorElement
         ]
         for (const inp of inputs) {
             inp.addEventListener('change', this.saveStorage.bind(this))
@@ -62,7 +83,7 @@ export class Controls {
             sizeBias: this._sizeBias.value,
             collisionCheck: this._collisionCheck.checked,
             partitionCheck: this._partitionCheck.checked,
-            partitionType: this._partitionType.value
+            partitionType: this._partitionControl.value
         }
         console.log('State being saved')
         console.log(saveState)
@@ -83,7 +104,7 @@ export class Controls {
     }
 
     get partitionType() {
-        return this._partitionType.value
+        return this._partitionControl.value
     }
 
     get numberBalls() {

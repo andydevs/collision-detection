@@ -8,18 +8,42 @@ import './style/main.scss'
 import { Ball } from './code/geometry/ball'
 import Vector, { randomWithBias } from './code/math/vector'
 import { boundaryCollision, ballCollision } from './code/physics/collision'
-import { dynamicPartitioningGrid, staticPartitioningGrid, noPartitioning } from './code/physics/partitioning'
+import * as partitonTypes from './code/physics/partitioning'
 import Screen from './code/ui/screen'
 import { LineGizmo } from './code/ui/gizmos'
-import { Controls } from './code/ui/controls';
+import { Controls, PartitionControl } from './code/ui/controls';
 import { Stats } from './code/ui/stats';
 import { Clock } from './code/clock';
+
+// Options for partitions
+let partitions = new PartitionControl({
+    'none': {
+        display: 'No Partitioning',
+        func: partitonTypes.noPartitioning
+    },
+    'even-grid-3-5':{
+        display: 'Even Grid 3x5',
+        func: partitonTypes.staticPartitioningGrid(3, 5)
+    },
+    'even-grid-6-10': {
+        display: 'Even Grid 6x10',
+        func: partitonTypes.staticPartitioningGrid(6, 10)
+    },
+    'dynamic-grid-2-2': {
+        display: 'Dynamic Grid 2x2',
+        func: partitonTypes.dynamicPartitioningGrid(2, 2)
+    },
+    'dynamic-grid-3-2': {
+        display: 'Dynamic Grid 3x2',
+        func: partitonTypes.dynamicPartitioningGrid(3, 2)
+    }
+})
 
 // Create a screen and controls
 let canvas = document.getElementById('canvas')
 let ctx = canvas.getContext('2d')
 let screen = new Screen(ctx)
-let controls = new Controls()
+let controls = new Controls(partitions)
 let stats = new Stats()
 let clock = new Clock()
 
@@ -81,15 +105,7 @@ requestAnimationFrame(function loop() {
     clock.tick()
     let DEBUG_COLLISIONS = controls.showCollisions
     let DEBUG_PARTITIONING = controls.showPartitions
-    let partitionFuncs = {
-        'none': noPartitioning,
-        'even-grid-3-5': staticPartitioningGrid(3, 5),
-        'even-grid-6-10': staticPartitioningGrid(6, 10),
-        'dynamic-grid-2-2': dynamicPartitioningGrid(2, 2),
-        'dynamic-grid-3-2': dynamicPartitioningGrid(3, 2)
-    }
-    let partSelection = controls.partitionType
-    let partitionFunc = partitionFuncs[partSelection]
+    let partitionFunc = partitions.func
 
     // Physics update step
     for (let ball of balls) { ball.update() }
