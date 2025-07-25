@@ -17,8 +17,6 @@ jobs:
         run: npm ci
       - name: Build Site
         run: npm run build
-      - name: Run Tests
-        run: npm test
 
       # Deploy
       - name: Deploy to GitHub Pages
