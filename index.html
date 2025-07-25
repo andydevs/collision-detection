@@ -7,44 +7,48 @@
 </head>
 <body>
     <div id="app">
-        <canvas id="canvas" width="1280" height="720"></canvas>
-        <div>
-            <p>Time Per Frame: <span id="delta">0ms</span></p>
-            <p>Approx. frame rate: <span id="framerate">0</span></p>
-            <p>Collision checks per frame: <span id="cps">0</span></p>
-        </div>
-        <div>
-            <div>
-                <p>
-                    <label># of Balls</label>
-                    <input id="number-balls" type="number" value="10" min="0">
-                </p>
-                <p>
-                    <label>Size Bias</label>
-                    <input id="size-bias" type="number" value="0.35" min="0.01" max="1.0">
-                </p>
-                <button id="generate-balls">Generate</button>
+        <div id="grid">
+            <canvas id="canvas" width="1280" height="720"></canvas>
+            <div id="stats">
+                <h2>Stats</h2>
+                <p>Time Per Frame: <span id="delta">0ms</span></p>
+                <p>Approx. frame rate: <span id="framerate">0</span></p>
+                <p>Collision checks per frame: <span id="cps">0</span></p>
             </div>
-            <div>
+            <div id="controls">
+                <h2>Controls</h2>
+                <div>
+                    <p>
+                        <label># of Balls</label>
+                        <input id="number-balls" type="number" value="10" min="0">
+                    </p>
+                    <p>
+                        <label>Size Bias</label>
+                        <input id="size-bias" type="number" value="0.35" min="0.01" max="1.0">
+                    </p>
+                    <button id="generate-balls">Generate</button>
+                </div>
+                <div>
+                    <p>
+                        <label>Show/Hide Collisions</label>
+                        <input type="checkbox" id="show-collision"><br>
+                    </p>
+                    <p>
+                        <label>Show/Hide Partitioning Info</label>
+                        <input type="checkbox" id="show-partitions"><br>
+                    </p>
+                </div>
                 <p>
-                    <label>Show/Hide Collisions</label>
-                    <input type="checkbox" id="show-collision"><br>
-                </p>
-                <p>
-                    <label>Show/Hide Partitioning Info</label>
-                    <input type="checkbox" id="show-partitions"><br>
+                    <label>Partition Type</label>
+                    <select id="partition-type">
+                        <option value="none">None</option>
+                        <option value="even-grid-3-5">Even Grid 3x5</option>
+                        <option value="even-grid-6-10">Even Grid 6x10</option>
+                        <option value="dynamic-grid-2-2">Dynamic Grid 2x2</option>
+                        <option value="dynamic-grid-3-2">Dynamic Grid 3x2</option>
+                    </select>
                 </p>
             </div>
-            <p>
-                <label>Partition Type</label>
-                <select id="partition-type">
-                    <option value="none">None</option>
-                    <option value="even-grid-3-5">Even Grid 3x5</option>
-                    <option value="even-grid-6-10">Even Grid 6x10</option>
-                    <option value="dynamic-grid-2-2">Dynamic Grid 2x2</option>
-                    <option value="dynamic-grid-3-2">Dynamic Grid 3x2</option>
-                </select>
-            </p>
         </div>
         <div>
             <p>
