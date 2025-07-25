@@ -12,6 +12,7 @@ import { dynamicPartitioningGrid, staticPartitioningGrid, noPartitioning } from 
 import Screen from './code/ui/screen'
 import { LineGizmo } from './code/ui/gizmos'
 import { Controls } from './code/ui/controls';
+import { Stats } from './code/ui/stats';
 import { Clock } from './code/clock';
 
 // Create a screen and controls
@@ -19,6 +20,7 @@ let canvas = document.getElementById('canvas')
 let ctx = canvas.getContext('2d')
 let screen = new Screen(ctx)
 let controls = new Controls()
+let stats = new Stats()
 let clock = new Clock()
 
 // Initialize game environments
@@ -54,9 +56,7 @@ function genearateBalls(number, bias) {
     return balls
 }
 controls.onGenerate(() => {
-    let numberOfBalls = parseInt(document.querySelector('#number-balls').value)
-    let sizeBias = parseFloat(document.querySelector('#size-bias').value)
-    balls = genearateBalls(numberOfBalls, sizeBias)
+    balls = genearateBalls(controls.numberBalls, controls.sizeBias)
 })
 
 // Buffer to hold current collision checks
@@ -65,11 +65,11 @@ let collisions = []
 // Update render time on an interval
 setInterval(() => {
     // Update frame stats
-    controls.frameDelta = clock.delta
-    controls.framerate = clock.framerate
+    stats.frameDelta = clock.delta
+    stats.framerate = clock.framerate
 
     // Update collision stats
-    controls.cps = balls.length*screen.boundaries.length
+    stats.cps = balls.length*screen.boundaries.length
                 + collisions.length
 }, 1000)
 

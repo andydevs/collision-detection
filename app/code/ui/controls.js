@@ -9,10 +9,6 @@ export class Controls {
     static storageKey = 'addvscd-setting-state'
 
     constructor() {
-        console.groupCollapsed('new Controls')
-        this._frameDeltaEntry = document.querySelector('#delta')
-        this._framerateEntry = document.querySelector('#framerate')
-        this._cpsEntry = document.querySelector('#cps')
         this._numberBalls = document.querySelector('#number-balls')
         this._sizeBias = document.querySelector('#size-bias')
         this._generateButton = document.querySelector('#generate-balls')
@@ -27,6 +23,7 @@ export class Controls {
 
     loadStorage() {
         // Load from localstorage
+        console.groupCollapsed('Load config from local storage')
         console.log('Checking localstorage for', Controls.storageKey)
         let savedStateJSON = localStorage.getItem(Controls.storageKey)
         if (savedStateJSON) {
@@ -95,18 +92,6 @@ export class Controls {
 
     get sizeBias() {
         return parseFloat(this._sizeBias.value)
-    }
-
-    set frameDelta(value) {
-        this._frameDeltaEntry.innerHTML = `${value}ms`
-    }
-
-    set framerate(value) {
-        this._framerateEntry.innerHTML = `${value}`
-    }
-
-    set cps(value) {
-        this._cpsEntry.innerHTML = `${value}`
     }
 
     onGenerate(callback) {
