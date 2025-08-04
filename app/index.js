@@ -8,12 +8,13 @@ import './style/main.scss'
 import { Ball } from './code/geometry/ball'
 import Vector, { randomWithBias } from './code/math/vector'
 import { boundaryCollision, ballCollision } from './code/physics/collision'
-import * as partitonTypes from './code/physics/partitioning'
 import Screen from './code/ui/screen'
-import { LineGizmo } from './code/ui/gizmos'
-import { Controls, PartitionControl } from './code/ui/controls';
-import { Stats } from './code/ui/stats';
-import { Clock } from './code/clock';
+import { NoPartitioningStrategy } from './code/physics/partitioning/no-partition'
+import { StaticGridPartitioningStrategy } from './code/physics/partitioning/static-grid'
+import { DynamicGridPartitioningStrategy } from './code/physics/partitioning/dynamic-grid'
+import { Controls, PartitionControl } from './code/ui/controls'
+import { Stats } from './code/ui/stats'
+import { Clock } from './code/clock'
 import { permutations } from './code/math/array'
 
 // Color palette for balls
@@ -26,30 +27,21 @@ const ballColors = [
     'white'
 ]
 
-// Controls for updating simulation
-let partitions = new PartitionControl({
-    'none': {
-        display: 'No Partitioning',
-        func: partitonTypes.noPartitioning
-    },
-    'even-grid-3-5':{
-        display: 'Even Grid 3x5',
-        func: partitonTypes.staticPartitioningGrid(3, 5)
-    },
-    'even-grid-6-10': {
-        display: 'Even Grid 6x10',
-        func: partitonTypes.staticPartitioningGrid(6, 10)
-    },
-    'dynamic-grid-2-2': {
-        display: 'Dynamic Grid 2x2',
-        func: partitonTypes.dynamicPartitioningGrid(2, 2)
-    },
-    'dynamic-grid-3-2': {
-        display: 'Dynamic Grid 3x2',
-        func: partitonTypes.dynamicPartitioningGrid(3, 2)
-    }
+/**
+ * Here we'll create a list of partition strategies
+ * 
+ * Partition control will handle setting the options field
+ */
+let partitionControl = new PartitionControl({
+    strategies: [
+        new NoPartitioningStrategy(),
+        new StaticGridPartitioningStrategy({ rows: 3, cols: 5 }),
+        new StaticGridPartitioningStrategy({ rows: 6, cols: 10 }),
+        new DynamicGridPartitioningStrategy({ rows: 2, cols: 2 }),
+        new DynamicGridPartitioningStrategy({ rows: 2, cols: 3 })
+    ]
 })
-let controls = new Controls(partitions)
+let controls = new Controls(partitionControl)
 
 // Simulation stats
 let stats = new Stats()
@@ -102,7 +94,7 @@ setInterval(() => {
     stats.framerate = clock.framerate
 
     // Update collision stats
-    stats.cps = balls.length * screen.boundaries.length + nChecks
+    stats.cps = nChecks
 }, 1000)
 
 /**
@@ -116,26 +108,32 @@ requestAnimationFrame(function loop() {
     balls.forEach(ball => ball.update())
     
     // Boundary collision detection
+    // TODO: Optimize this based on partitioning...
     permutations(balls, screen.boundaries).forEach(([ball, boundary]) => {
         boundaryCollision(screen, boundary, ball, clock.time, gizmos, controls.showCollisions)
     })
-    
-    // Use partition algorithm to get possible collision checks
-    let collisions = partitions.func(screen, 
-        balls, clock.time, 
-        gizmos, controls.showPartitions)
-    nChecks = collisions.length
 
+    // Use partition algorithm to get possible collision checks
+    let collisions = partitionControl.strategy.partition(screen, balls)
+    nChecks = collisions.length
+    nChecks += balls.length * screen.boundaries.length
+    
     // Check collisions
     collisions.forEach(([a, b]) => {
-        if (controls.showPartitions) {
-            gizmos.push(new LineGizmo(clock.time + 10, a.pos, b.pos))
-        }
         ballCollision(screen, a, b, clock.time, gizmos, controls.showCollisions)
     })
 
     // Render step
     screen.clear()
+
+    // ==> Here if debug partitioning is set, we'll draw partition state
+    if (controls.showPartitions) {
+        partitionControl.strategy.draw(screen, balls)
+        collisions.forEach(([a, b]) => {
+            screen.drawLine(a.pos, b.pos, '#eee')
+        })
+    }
+
     gizmos = gizmos.filter(g => g.stillvalid(clock))
     gizmos.forEach(gizmo => gizmo.draw(screen))
     balls.forEach(ball => ball.draw(screen))
