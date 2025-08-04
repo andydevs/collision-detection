@@ -94,7 +94,7 @@ setInterval(() => {
     stats.framerate = clock.framerate
 
     // Update collision stats
-    stats.cps = balls.length * screen.boundaries.length + nChecks
+    stats.cps = nChecks
 }, 1000)
 
 /**
@@ -116,6 +116,7 @@ requestAnimationFrame(function loop() {
     // Use partition algorithm to get possible collision checks
     let collisions = partitionControl.strategy.partition(screen, balls)
     nChecks = collisions.length
+    nChecks += balls.length * screen.boundaries.length
     
     // Check collisions
     collisions.forEach(([a, b]) => {

@@ -40,9 +40,11 @@ export class DynamicGridPartitioningStrategy extends PartitionStrategy {
         if (balls.length <= 2 || maxRec <= 0 ) { return }
 
         // Subdivide partitions
-        cell.partition(this.cols, this.rows).forEach(subcell => {
+        let rows = maxRec % 2 === 0 ? this.cols : this.rows
+        let cols = maxRec % 2 === 0 ? this.rows : this.cols
+        cell.partition(cols, rows).forEach(subcell => {
             let sballs = balls.filter(ball => ball.boundingBox.overlaps(subcell))
-            return this._recursivePartitionDraw(screen, sballs, subcell, maxRec - 1)
+            this._recursivePartitionDraw(screen, sballs, subcell, maxRec - 1)
         })
     }
 
@@ -55,9 +57,11 @@ export class DynamicGridPartitioningStrategy extends PartitionStrategy {
         if (balls.length === 2) { return [ { u: balls } ] }
 
         // Subdivide partitions
-        return cell.partition(this.cols, this.rows).flatMap(subcell => {
-            let subballs = balls.filter(ball => ball.boundingBox.overlaps(subcell))
-            return this._recursivePartition(subballs, subcell, maxRec - 1)
+        let rows = maxRec % 2 === 0 ? this.cols : this.rows
+        let cols = maxRec % 2 === 0 ? this.rows : this.cols
+        return cell.partition(cols, rows).flatMap(subcell => {
+            let sballs = balls.filter(ball => ball.boundingBox.overlaps(subcell))
+            return this._recursivePartition(sballs, subcell, maxRec - 1)
         })
     }
 
@@ -71,8 +75,7 @@ export class DynamicGridPartitioningStrategy extends PartitionStrategy {
      * @returns {Ball[][]} list of possible collision checks we can make
      */
     partition(screen, balls) {
-        return this._recursivePartition(balls, screen.worldRect, this.maxRec)
-            .map(({ u }) => u)
+        return this._recursivePartition(balls, screen.worldRect, this.maxRec).map(({ u }) => u)
     }
 
     /**
