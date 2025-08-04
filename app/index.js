@@ -8,10 +8,10 @@ import './style/main.scss'
 import { Ball } from './code/geometry/ball'
 import Vector, { randomWithBias } from './code/math/vector'
 import { boundaryCollision, ballCollision } from './code/physics/collision'
-import * as partitonTypes from './code/physics/partitioning'
+import * as partitonTypes from './code/physics/legacy-partitioning'
 import Screen from './code/ui/screen'
 import { LineGizmo } from './code/ui/gizmos'
-import { Controls, PartitionControl } from './code/ui/controls';
+import { Controls, LegacyPartitionControl } from './code/ui/legacy-controls';
 import { Stats } from './code/ui/stats';
 import { Clock } from './code/clock';
 import { permutations } from './code/math/array'
@@ -26,8 +26,14 @@ const ballColors = [
     'white'
 ]
 
+/**
+ * Here we'll create a list of partition strategies
+ * 
+ * Partition control will handle setting the options field
+ */
+
 // Controls for updating simulation
-let partitions = new PartitionControl({
+let legacyPartitionControl = new LegacyPartitionControl({
     'none': {
         display: 'No Partitioning',
         func: partitonTypes.noPartitioning
@@ -49,7 +55,7 @@ let partitions = new PartitionControl({
         func: partitonTypes.dynamicPartitioningGrid(3, 2)
     }
 })
-let controls = new Controls(partitions)
+let controls = new Controls(legacyPartitionControl)
 
 // Simulation stats
 let stats = new Stats()
@@ -116,12 +122,15 @@ requestAnimationFrame(function loop() {
     balls.forEach(ball => ball.update())
     
     // Boundary collision detection
+    // TODO: Optimize this based on partitioning...
     permutations(balls, screen.boundaries).forEach(([ball, boundary]) => {
         boundaryCollision(screen, boundary, ball, clock.time, gizmos, controls.showCollisions)
     })
+
+    // ==> Here if debug partitioning is set, we'll draw partition state
     
     // Use partition algorithm to get possible collision checks
-    let collisions = partitions.func(screen, 
+    let collisions = legacyPartitionControl.func(screen, 
         balls, clock.time, 
         gizmos, controls.showPartitions)
     nChecks = collisions.length
