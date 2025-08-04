@@ -8,16 +8,27 @@
 /**
  * Handles partition strategy selector
  */
-export class LegacyPartitionControl {
-    constructor(options) {
-        // ==> here we create options based on the strategy. 
+export class PartitionControl {
+    /**
+     * Initialize partition control
+     * 
+     * PartitionControlParams {
+     *     strategies: PartitionStrategy[]
+     * }
+     * 
+     * @param {PartitionControlParams} params input params
+     */
+    constructor(params) {
+        // ==> here we create params based on the strategy. 
         //      we'll also create a map between the id and strategy
         this._selectorElement = document.querySelector('#partition-type')
-        this._options = options
-        Object.entries(this._options).forEach(([key, { display }]) => {
+        this._strategies = params.strategies
+        this._strategyMap = Object.fromEntries(
+            this._strategies.map((strategy) => [strategy.id, strategy]))
+        this._strategies.forEach((strategy) => {
             let option = document.createElement('option')
-            option.setAttribute('value', key)
-            option.textContent = display;
+            option.setAttribute('value', strategy.id)
+            option.textContent = strategy.displayName;
             this._selectorElement.appendChild(option)
         })
     }
@@ -26,8 +37,8 @@ export class LegacyPartitionControl {
         return this._selectorElement.value
     }
 
-    get func() {
-        return this._options[this.value].func
+    get strategy() {
+        return this._strategyMap[this.value]
     }
 }
 

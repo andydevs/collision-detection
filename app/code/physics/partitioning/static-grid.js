@@ -16,6 +16,7 @@ export class StaticGridPartitioningStrategy extends PartitionStrategy {
      * Create StaticGridPartitioningStrategy
      */
     constructor(params) {
+        super()
         this.rows = params.rows
         this.cols = params.cols
     }

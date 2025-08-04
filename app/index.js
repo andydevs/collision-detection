@@ -8,12 +8,13 @@ import './style/main.scss'
 import { Ball } from './code/geometry/ball'
 import Vector, { randomWithBias } from './code/math/vector'
 import { boundaryCollision, ballCollision } from './code/physics/collision'
-import * as partitonTypes from './code/physics/legacy-partitioning'
 import Screen from './code/ui/screen'
-import { LineGizmo } from './code/ui/gizmos'
-import { Controls, LegacyPartitionControl } from './code/ui/legacy-controls';
-import { Stats } from './code/ui/stats';
-import { Clock } from './code/clock';
+import { NoPartitioningStrategy } from './code/physics/partitioning/no-partition'
+import { StaticGridPartitioningStrategy } from './code/physics/partitioning/static-grid'
+import { DynamicGridPartitioningStrategy } from './code/physics/partitioning/dynamic-grid'
+import { Controls, PartitionControl } from './code/ui/controls'
+import { Stats } from './code/ui/stats'
+import { Clock } from './code/clock'
 import { permutations } from './code/math/array'
 
 // Color palette for balls
@@ -31,31 +32,16 @@ const ballColors = [
  * 
  * Partition control will handle setting the options field
  */
-
-// Controls for updating simulation
-let legacyPartitionControl = new LegacyPartitionControl({
-    'none': {
-        display: 'No Partitioning',
-        func: partitonTypes.noPartitioning
-    },
-    'even-grid-3-5':{
-        display: 'Even Grid 3x5',
-        func: partitonTypes.staticPartitioningGrid(3, 5)
-    },
-    'even-grid-6-10': {
-        display: 'Even Grid 6x10',
-        func: partitonTypes.staticPartitioningGrid(6, 10)
-    },
-    'dynamic-grid-2-2': {
-        display: 'Dynamic Grid 2x2',
-        func: partitonTypes.dynamicPartitioningGrid(2, 2)
-    },
-    'dynamic-grid-3-2': {
-        display: 'Dynamic Grid 3x2',
-        func: partitonTypes.dynamicPartitioningGrid(3, 2)
-    }
+let partitionControl = new PartitionControl({
+    strategies: [
+        new NoPartitioningStrategy(),
+        new StaticGridPartitioningStrategy({ rows: 3, cols: 5 }),
+        new StaticGridPartitioningStrategy({ rows: 6, cols: 10 }),
+        new DynamicGridPartitioningStrategy({ rows: 2, cols: 2 }),
+        new DynamicGridPartitioningStrategy({ rows: 2, cols: 3 })
+    ]
 })
-let controls = new Controls(legacyPartitionControl)
+let controls = new Controls(partitionControl)
 
 // Simulation stats
 let stats = new Stats()
@@ -127,24 +113,26 @@ requestAnimationFrame(function loop() {
         boundaryCollision(screen, boundary, ball, clock.time, gizmos, controls.showCollisions)
     })
 
-    // ==> Here if debug partitioning is set, we'll draw partition state
-    
     // Use partition algorithm to get possible collision checks
-    let collisions = legacyPartitionControl.func(screen, 
-        balls, clock.time, 
-        gizmos, controls.showPartitions)
+    let collisions = partitionControl.strategy.partition(screen, balls)
     nChecks = collisions.length
-
+    
     // Check collisions
     collisions.forEach(([a, b]) => {
-        if (controls.showPartitions) {
-            gizmos.push(new LineGizmo(clock.time + 10, a.pos, b.pos))
-        }
         ballCollision(screen, a, b, clock.time, gizmos, controls.showCollisions)
     })
 
     // Render step
     screen.clear()
+
+    // ==> Here if debug partitioning is set, we'll draw partition state
+    if (controls.showPartitions) {
+        partitionControl.strategy.draw(screen, balls)
+        collisions.forEach(([a, b]) => {
+            screen.drawLine(a.pos, b.pos, '#eee')
+        })
+    }
+
     gizmos = gizmos.filter(g => g.stillvalid(clock))
     gizmos.forEach(gizmo => gizmo.draw(screen))
     balls.forEach(ball => ball.draw(screen))

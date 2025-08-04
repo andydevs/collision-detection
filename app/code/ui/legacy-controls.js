@@ -31,7 +31,7 @@ export class LegacyPartitionControl {
     }
 }
 
-export class Controls {
+export class LegacyControls {
     static storageKey = 'addvscd-setting-state'
 
     constructor(partitionControl) {
@@ -50,8 +50,8 @@ export class Controls {
     loadStorage() {
         // Load from localstorage
         console.groupCollapsed('Load config from local storage')
-        console.log('Checking localstorage for', Controls.storageKey)
-        let savedStateJSON = localStorage.getItem(Controls.storageKey)
+        console.log('Checking localstorage for', LegacyControls.storageKey)
+        let savedStateJSON = localStorage.getItem(LegacyControls.storageKey)
         if (savedStateJSON) {
             console.log('Loaded data from state')
             console.log(savedStateJSON)
@@ -95,8 +95,8 @@ export class Controls {
         console.log('Saving to json')
         let saveStateJSON = JSON.stringify(saveState)
         console.log(saveStateJSON)
-        console.log('Setting to stoage key:', Controls.storageKey)
-        localStorage.setItem(Controls.storageKey, saveStateJSON)
+        console.log('Setting to stoage key:', LegacyControls.storageKey)
+        localStorage.setItem(LegacyControls.storageKey, saveStateJSON)
         console.groupEnd()
     }
 

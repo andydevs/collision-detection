@@ -4,9 +4,7 @@
  * Author:  Anshul Kharbanda
  * Created: 4 - 30 - 2021
  */
-const { uniquePairs } = require('../../math/array')
 import { PartitionStrategy } from "./strategy"
-
 
 /**
  * Divide screen into dynamic grid
@@ -16,6 +14,7 @@ export class DynamicGridPartitioningStrategy extends PartitionStrategy {
      * Create DynamicGridPartitioningStrategy
      */
     constructor(params) {
+        super()
         this.rows = params.rows
         this.cols = params.cols
         this.maxRec = params.maxRec || 5
@@ -32,26 +31,34 @@ export class DynamicGridPartitioningStrategy extends PartitionStrategy {
     get displayName() { return `Dynamic Grid ${this.cols}x${this.rows}` }
 
     /**
-     * Recursive partitioning
+     * Draw cells partitioning
      */
-    _recursivePartition = (balls, cell, returnCells, maxRec) => {
-        // Base conditions
-        if (balls.length < 2) { return [] }
-        if (balls.length === 2 || maxRec <= 0 ) { 
-            return [ returnCells ? cell : { u: balls } ]
-        }
+    _recursivePartitionDraw = (screen, balls, cell, maxRec) => {
+        screen.drawRect(cell, '#999')
+
+        // Base condition
+        if (balls.length <= 2 || maxRec <= 0 ) { return }
 
         // Subdivide partitions
-        let subcells = cell
-            .partition(this.cols, this.rows)
-            .flatMap(subcell => {
-                let subballs = balls.filter(ball => ball.boundingBox.overlaps(subcell))
-                return this._recursivePartition(subballs, subcell, returnCells, maxRec - 1)
-            })
-        if (returnCells) {
-            subcells.push(cell)
-        }
-        return subcells
+        cell.partition(this.cols, this.rows).forEach(subcell => {
+            let sballs = balls.filter(ball => ball.boundingBox.overlaps(subcell))
+            return this._recursivePartitionDraw(screen, sballs, subcell, maxRec - 1)
+        })
+    }
+
+    /**
+     * Recursive partitioning
+     */
+    _recursivePartition = (balls, cell, maxRec) => {
+        // Base conditions
+        if (balls.length < 2 || maxRec <= 0) { return [] }
+        if (balls.length === 2) { return [ { u: balls } ] }
+
+        // Subdivide partitions
+        return cell.partition(this.cols, this.rows).flatMap(subcell => {
+            let subballs = balls.filter(ball => ball.boundingBox.overlaps(subcell))
+            return this._recursivePartition(subballs, subcell, maxRec - 1)
+        })
     }
 
     /**
@@ -64,7 +71,7 @@ export class DynamicGridPartitioningStrategy extends PartitionStrategy {
      * @returns {Ball[][]} list of possible collision checks we can make
      */
     partition(screen, balls) {
-        return this._recursivePartition(balls, screen.worldRect, false, this.maxRec)
+        return this._recursivePartition(balls, screen.worldRect, this.maxRec)
             .map(({ u }) => u)
     }
 
@@ -75,9 +82,6 @@ export class DynamicGridPartitioningStrategy extends PartitionStrategy {
      * @param {Ball[]} balls list of balls to partition within screen
      */
     draw(screen, balls) {
-        this._recursivePartition(balls, screen.worldRect, true, this.maxRec)
-            .foreEach(cell => {
-                screen.drawRect(cell, '#999')
-            })
+        this._recursivePartitionDraw(screen, balls, screen.worldRect, this.maxRec)
     }
 }
