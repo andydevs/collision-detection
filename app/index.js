@@ -150,7 +150,7 @@ requestAnimationFrame(function loop() {
     // If show Partitions is set, we'll draw partition state
     if (controls.showPartitions) {
         partitionControl.strategy.draw(screen, balls)
-        collisions.forEach(([a, b]) => {
+        collisionChecks.forEach(([a, b]) => {
             screen.drawLine(a.pos, b.pos, '#eee')
         })
     }
