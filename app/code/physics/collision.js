@@ -6,6 +6,18 @@
  */
 import Vector from '../math/vector'
 import Matrix from '../math/matrix'
+import { Expirable } from '../ui/screen';
+
+export function createCollisionExpirable(params) {
+    let drawCollision = (screen, col) => {
+        screen.drawRay(col.center, col.a.initial, -5, 'green')
+        screen.drawRay(col.center, col.a.final, 5, 'green')
+    }
+    return new Expirable({
+        frames: params.frames,
+        drawFunc: (screen) => params.collisions.forEach(col => drawCollision(screen, col))
+    })
+}
 
 /**
  * Check boundary collision of ball. Handle intersection
@@ -14,29 +26,36 @@ import Matrix from '../math/matrix'
  * @param {Boundary} boundary boundary being checked
  * @param {Ball} ball ball being checked
  * 
- * @returns true if collided
+ * @returns Collision information or null
  */
 export function boundaryCollision(boundary, ball) {
     // Distance to boundary
     let distance = ball.pos.sub(boundary.pos).dot(boundary.norm)
 
     // Ball has not collided
-    if (distance >= ball.rad) { return false }
+    if (distance >= ball.rad) { return null }
 
     // Correction translation
     let correction = ball.rad - distance
     ball.pos = ball.pos.add(boundary.norm.scale(correction))
     
     // Velocity reflection
-    let vNormal = boundary.norm.scale(ball.vel.dot(boundary.norm))
+    let vInitial = ball.vel
+    let vNormal = boundary.norm.scale(vInitial.dot(boundary.norm))
     let vParallel = ball.vel.sub(vNormal)
     let vFinal = vParallel.sub(vNormal)
 
     // Update velocity
     ball.vel = vFinal
-    
-    // Ball has collided
-    return true
+
+    // Return collision information
+    return {
+        center: ball.pos.sub(boundary.norm.scale(distance)),
+        a: {
+            initial: vInitial,
+            final: vFinal
+        }
+    }
 }
 
 /**

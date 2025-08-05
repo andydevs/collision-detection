@@ -7,8 +7,8 @@
 import './style/main.scss'
 import { Ball } from './code/geometry/ball'
 import Vector, { randomWithBias } from './code/math/vector'
-import { boundaryCollision, ballCollision } from './code/physics/collision'
-import Screen from './code/ui/screen'
+import { boundaryCollision, ballCollision, createCollisionExpirable } from './code/physics/collision'
+import Screen, { Expirable } from './code/ui/screen'
 import { NoPartitioningStrategy } from './code/physics/partitioning/no-partition'
 import { StaticGridPartitioningStrategy } from './code/physics/partitioning/static-grid'
 import { DynamicGridPartitioningStrategy } from './code/physics/partitioning/dynamic-grid'
@@ -79,6 +79,7 @@ function genearateBalls(number, bias) {
 
 // Initialize game environment stuff
 let balls = []
+let expirables = []
 controls.onGenerate(() => {
     balls = genearateBalls(controls.numberBalls, controls.sizeBias)
 })
@@ -113,17 +114,26 @@ requestAnimationFrame(function loop() {
     
     // Boundary collision detection
     // TODO: Optimize this based on partitioning...
-    permutations(balls, screen.boundaries).forEach(([ball, boundary]) => {
-        boundaryCollision(boundary, ball)
-    })
-    
+    let boundaryCollisions = permutations(balls, screen.boundaries)
+        .map(([ball, boundary]) => boundaryCollision(boundary, ball))
+        .filter(col => col !== null)
+        
     // Check ball-to-ball collisions
     collisions.forEach(([a, b]) => {
         ballCollision(a, b)
     })
+    
+    if (controls.showCollisions && boundaryCollisions.length > 0) {
+        expirables.push(
+            createCollisionExpirable({
+                frames: 100,
+                collisions: boundaryCollisions
+            })
+        )
+    }
 
     // ====== <Render Step> ========
-
+    
     screen.clear()
     
     // If show Partitions is set, we'll draw partition state
@@ -133,6 +143,10 @@ requestAnimationFrame(function loop() {
             screen.drawLine(a.pos, b.pos, '#eee')
         })
     }
+    
+    // Draw expirables
+    expirables = expirables.filter(xp => xp.alive)
+    expirables.forEach(xp => xp.draw(screen))
 
     // Draw balls after partitioning so they're overhead
     balls.forEach(ball => ball.draw(screen))
