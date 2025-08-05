@@ -8,7 +8,7 @@ import './style/main.scss'
 import { Ball } from './code/geometry/ball'
 import Vector, { randomWithBias } from './code/math/vector'
 import { boundaryCollision, ballCollision, createCollisionExpirable } from './code/physics/collision'
-import Screen, { Expirable } from './code/ui/screen'
+import Screen from './code/ui/screen'
 import { NoPartitioningStrategy } from './code/physics/partitioning/no-partition'
 import { StaticGridPartitioningStrategy } from './code/physics/partitioning/static-grid'
 import { DynamicGridPartitioningStrategy } from './code/physics/partitioning/dynamic-grid'
@@ -108,26 +108,37 @@ requestAnimationFrame(function loop() {
     balls.forEach(ball => ball.update())
 
     // Use partition algorithm to get possible collision checks
-    let collisions = partitionControl.strategy.partition(screen, balls)
-    nChecks = collisions.length
+    let collisionChecks = partitionControl.strategy.partition(screen, balls)
+    nChecks = collisionChecks.length
     nChecks += balls.length * screen.boundaries.length
     
     // Boundary collision detection
     // TODO: Optimize this based on partitioning...
     let boundaryCollisions = permutations(balls, screen.boundaries)
         .map(([ball, boundary]) => boundaryCollision(boundary, ball))
-        .filter(col => col !== null)
+        .filter(col => col !== null && col !== undefined)
         
     // Check ball-to-ball collisions
-    collisions.forEach(([a, b]) => {
-        ballCollision(a, b)
-    })
-    
-    if (controls.showCollisions && boundaryCollisions.length > 0) {
+    let ballCollisions = collisionChecks
+        .map(([a, b]) => ballCollision(a, b) )
+        .filter(col => col !== null && col !== undefined)
+
+    // Add all collisions to expirables
+    let collisions = [ ...boundaryCollisions, ...ballCollisions ]
+    if (controls.showCollisions && collisions.length > 0) {
         expirables.push(
             createCollisionExpirable({
+                collisions,
                 frames: 100,
-                collisions: boundaryCollisions
+                style: {
+                    lineWidth: 3,
+                    length: 20,
+                    color: { 
+                        a: 'green',
+                        b: 'red', 
+                        parallel: '#0ac' 
+                    }
+                }
             })
         )
     }
