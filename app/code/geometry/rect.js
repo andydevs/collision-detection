@@ -33,16 +33,42 @@ export class Rect {
 
     get center() {
         let { x0, x1, y0, y1 } = this
-        return new Vector((x0+x1)/2, (y0+y1)/2)
+        return new Vector((x0 + x1) / 2, (y0 + y1) / 2)
+    }
+
+    divideX(cutLine) {
+        return [
+            new Rect(
+                this.x0, cutLine,
+                this.y0, this.y1
+            ),
+            new Rect(
+                cutLine, this.x1,
+                this.y0, this.y1
+            )
+        ]
+    }
+
+    divideY(cutLine) {
+        return [
+            new Rect(
+                this.x0, this.x1,
+                this.y0, cutLine
+            ),
+            new Rect(
+                this.x0, this.x1,
+                cutLine, this.y1
+            )
+        ]
     }
 
     partition(columns, rows) {
         let columnBreaks = linearBreaks(this.x0, this.x1, columns + 1)
         let rowBreaks = linearBreaks(this.y0, this.y1, rows + 1)
         return permutations(
-                numberRange(columnBreaks.length - 1),
-                numberRange(rowBreaks.length - 1)
-            )
+            numberRange(columnBreaks.length - 1),
+            numberRange(rowBreaks.length - 1)
+        )
             .map(([i, j]) => new Rect(
                 columnBreaks[i],
                 columnBreaks[i + 1],
