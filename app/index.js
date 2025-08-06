@@ -19,11 +19,11 @@ import { permutations } from './code/math/array'
 
 // Color palette for balls
 const ballColors = [
-    'cyan', 
-    'lime', 
+    'cyan',
+    'lime',
     'coral',
-    'yellow', 
-    'violet', 
+    'yellow',
+    'violet',
     'white'
 ]
 
@@ -62,10 +62,10 @@ let clock = new Clock()
  */
 function genearateBalls(number, bias) {
     console.groupCollapsed('genearateBalls(' + number + ', ' + bias + ')')
-    let balls = Array.from({ length: number}, (_,i) => {
+    let balls = Array.from({ length: number }, (_, i) => {
         let ball = new Ball(
             Vector.random(-300, 300, -300, 300),
-            Vector.random(-5, 5, -5, 5),
+            Vector.random(-400, 400, -400, 400),
             randomWithBias(5, 30, bias, 0),
             ballColors[i % ballColors.length]
         )
@@ -105,26 +105,26 @@ requestAnimationFrame(function loop() {
     clock.tick()
 
     // Physics update step
-    balls.forEach(ball => ball.update())
+    balls.forEach(ball => ball.update(clock.deltaSeconds))
 
     // Use partition algorithm to get possible collision checks
     let collisionChecks = partitionControl.strategy.partition(screen, balls)
     nChecks = collisionChecks.length
     nChecks += balls.length * screen.boundaries.length
-    
+
     // Boundary collision detection
     // TODO: Optimize this based on partitioning...
     let boundaryCollisions = permutations(balls, screen.boundaries)
         .map(([ball, boundary]) => boundaryCollision(boundary, ball))
         .filter(col => col !== null && col !== undefined)
-        
+
     // Check ball-to-ball collisions
     let ballCollisions = collisionChecks
-        .map(([a, b]) => ballCollision(a, b) )
+        .map(([a, b]) => ballCollision(a, b))
         .filter(col => col !== null && col !== undefined)
 
     // Add all collisions to expirables
-    let collisions = [ ...boundaryCollisions, ...ballCollisions ]
+    let collisions = [...boundaryCollisions, ...ballCollisions]
     if (controls.showCollisions && collisions.length > 0) {
         expirables.push(
             createCollisionExpirable({
@@ -133,10 +133,10 @@ requestAnimationFrame(function loop() {
                 style: {
                     lineWidth: 3,
                     length: 20,
-                    color: { 
+                    color: {
                         a: 'green',
-                        b: 'red', 
-                        parallel: '#0ac' 
+                        b: 'red',
+                        parallel: '#0ac'
                     }
                 }
             })
@@ -144,9 +144,9 @@ requestAnimationFrame(function loop() {
     }
 
     // ====== <Render Step> ========
-    
+
     screen.clear()
-    
+
     // If show Partitions is set, we'll draw partition state
     if (controls.showPartitions) {
         partitionControl.strategy.draw(screen, balls)
@@ -154,14 +154,14 @@ requestAnimationFrame(function loop() {
             screen.drawLine(a.pos, b.pos, '#eee')
         })
     }
-    
+
     // Draw expirables
     expirables = expirables.filter(xp => xp.alive)
     expirables.forEach(xp => xp.draw(screen))
 
     // Draw balls after partitioning so they're overhead
     balls.forEach(ball => ball.draw(screen))
-    
+
     // ====== </Render Step> ========
 
     // Reloop
