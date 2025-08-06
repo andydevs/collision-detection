@@ -6,72 +6,80 @@
  */
 import Vector from '../math/vector'
 import Matrix from '../math/matrix'
-import { LineGizmo, RayGizmo } from '../ui/gizmos'
+import { Expirable } from '../ui/screen';
 
-// Time constants
-const SECONDS = 1000
+/**
+ * Create expirable for drawing set of collisions for this frame
+ * 
+ * @param {CollisionExprableParams} params parameters for collision expirable
+ * 
+ * @returns {Expirable} collision expirable
+ */
+export function createCollisionExpirable(params) {
+    let drawOutgoing = (screen, c, d, q) => {
+        screen.drawRay(c, d, params.style.length, params.style.color[q], params.style.lineWidth)
+    }
+    let drawIncoming = (screen, c, d, q) => {
+        screen.drawRay(c, d, -params.style.length, params.style.color[q], params.style.lineWidth)
+    }
+    let drawParallel = (screen, c, p) => {
+        screen.drawRay(c, p, -params.style.length, params.style.color.parallel, params.style.lineWidth)
+        screen.drawRay(c, p, params.style.length, params.style.color.parallel, params.style.lineWidth)
+    }
+    let drawCollision = (screen, col) => {
+        drawIncoming(screen, col.center, col.a.initial, 'a')
+        drawOutgoing(screen, col.center, col.a.final, 'a')
+        if (col.hasOwnProperty('b')) {
+            drawIncoming(screen, col.center, col.b.initial, 'b')
+            drawOutgoing(screen, col.center, col.b.final, 'b')
+        }
+        if (col.hasOwnProperty('parallel')) {
+            drawParallel(screen, col.center, col.parallel)
+        }
+    }
+    return new Expirable({
+        frames: params.frames,
+        drawFunc: (screen) => params.collisions
+            .forEach(col => drawCollision(screen, col))
+    })
+}
 
 /**
  * Check boundary collision of ball. Handle intersection
  * correction and velocity reflection
  * 
- * @param {Screen} screen screen to draw debug to
  * @param {Boundary} boundary boundary being checked
  * @param {Ball} ball ball being checked
- * @param {int} time current timestamp
- * @param {boolean} debug true if we're debugging
- * @param {Array} gizmos gizmos array
  * 
- * @returns true if collided
+ * @returns {Collision | null} collision information if collision occurred (else null)
  */
-export function boundaryCollision(screen, boundary, ball, time, gizmos, debug=false) {
+export function boundaryCollision(boundary, ball) {
     // Distance to boundary
     let distance = ball.pos.sub(boundary.pos).dot(boundary.norm)
-    if (distance < ball.rad) {
-        if (debug) {
-            console.group('collision')
-            console.log(boundary)
-            console.log(ball)
-            console.groupEnd()
-        }
-        let correction = ball.rad - distance
-        ball.pos = ball.pos.add(boundary.norm.scale(correction))
-        
-        // Velocity reflection
-        let vNormal = boundary.norm.scale(ball.vel.dot(boundary.norm))
-        let vParallel = ball.vel.sub(vNormal)
-        let vFinal = vParallel.sub(vNormal)
-        
-        // Debug collision
-        if (debug) {
-            // Line radius
-            let radius = 20
-            let linewidth = 1
 
-            // Add gizmos
-            gizmos.push(
-                new RayGizmo(time + 1*SECONDS,
-                    ball.pos.sub(boundary.norm.scale(ball.rad)), 
-                    ball.vel.scale(-1), radius,
-                    '#0f0', linewidth
-                ),
-                new RayGizmo(time + 1*SECONDS,
-                    ball.pos.sub(boundary.norm.scale(ball.rad)), 
-                    vFinal, radius,
-                    '#0f0', linewidth
-                )
-            )
-        }
+    // Ball has not collided
+    if (distance >= ball.rad) { return null }
 
-        // Update velocity
-        ball.vel = vFinal
-        
-        // Ball has collided
-        return true
-    }
-    else {
-        // Ball has not collided
-        return false
+    // Correction translation
+    let correction = ball.rad - distance
+    ball.pos = ball.pos.add(boundary.norm.scale(correction))
+
+    // Velocity reflection
+    let vInitial = ball.vel
+    let vNormal = boundary.norm.scale(vInitial.dot(boundary.norm))
+    let vParallel = ball.vel.sub(vNormal)
+    let vFinal = vParallel.sub(vNormal)
+
+    // Update velocity
+    ball.vel = vFinal
+
+    // Return collision information
+    return {
+        center: ball.pos.sub(boundary.norm.scale(distance)),
+        a: {
+            initial: vInitial.unit,
+            final: vFinal.unit
+        }
     }
 }
 
@@ -79,107 +87,79 @@ export function boundaryCollision(screen, boundary, ball, time, gizmos, debug=fa
  * Check ball collision. Handle intersection correction
  * and momentum transfer
  * 
- * @param {Screen} screen screen to draw debug to
  * @param {Ball} a ball A being checked
  * @param {Ball} b ball B being checked
- * @param {int} time current timestamp
- * @param {Array} gizmos gizmos array
- * @param {boolean} debug true if debugging
  * 
- * @returns true if collided
+ * @returns {Collision | null} collision information if collision occurred (else null)
  */
-export function ballCollision(screen, a, b, time, gizmos, debug=false) {
+export function ballCollision(a, b) {
     // Difference vector
     let vectorDifferenceBetweenBalls = b.pos.sub(a.pos)
 
-    // If distance is greater than both radii
-    if (vectorDifferenceBetweenBalls.magnitude < (a.rad + b.rad)) {
-        // First find the collision normals
-        let collisionNormal = vectorDifferenceBetweenBalls.unit
-        let collisionAntinormal = collisionNormal.scale(-1)
+    // Return false if the distance is greater than the radii
+    if (vectorDifferenceBetweenBalls.magnitude >= (a.rad + b.rad)) { return null }
 
-        // Correction translation
-        let intersectionCorrectionFactor = ((a.rad + b.rad) - vectorDifferenceBetweenBalls.magnitude)/2
-        let aCorrectedPosition = a.pos
-            .add(collisionAntinormal.scale(intersectionCorrectionFactor))
-        let bCorrectedPosition = b.pos
-            .add(collisionNormal.scale(intersectionCorrectionFactor))
+    // First find the collision normals
+    let collisionNormal = vectorDifferenceBetweenBalls.unit
+    let collisionAntinormal = collisionNormal.scale(-1)
+    let collisionParallel = new Vector(-collisionNormal.y, collisionNormal.x)
 
-        // Find projections of velocity on normal
-        let aPreCollisionNormalVelocity = collisionNormal
-            .scale(a.vel.dot(collisionNormal))
-        let bPreCollisionAntinormalVelocity = collisionAntinormal
-            .scale(b.vel.dot(collisionAntinormal))
+    // Correction translation
+    let intersectionCorrectionFactor = ((a.rad + b.rad) - vectorDifferenceBetweenBalls.magnitude) / 2
+    let aCorrectedPosition = a.pos
+        .add(collisionAntinormal.scale(intersectionCorrectionFactor))
+    let bCorrectedPosition = b.pos
+        .add(collisionNormal.scale(intersectionCorrectionFactor))
 
-        // Get other components of velocity on parallel
-        let aParallelVelocity = a.vel.sub(aPreCollisionNormalVelocity)
-        let bParallelVelocity = b.vel.sub(bPreCollisionAntinormalVelocity)
+    // Initial velocity
+    let aPreCollisionVelocity = a.vel
+    let bPreCollisionVelocity = b.vel
 
-        // Momentum exchange using the khan equation
-        let preCollisionVelocityState = new Vector(
-            aPreCollisionNormalVelocity.magnitude,
-            bPreCollisionAntinormalVelocity.magnitude
-        )
-        let khanMatrix = new Matrix(
-            (a.mass - b.mass), 2*b.mass,
-            2*a.mass, (b.mass - a.mass)
-        ).scale(1/(a.mass + b.mass))
-        let postCollisionVelocityState = khanMatrix
-            .transform(preCollisionVelocityState)
-        let aPostCollisionVelocity = collisionNormal
-            .scale(-postCollisionVelocityState.x)
-            .add(aParallelVelocity)
-        let bPostCollisionVelocity = collisionAntinormal
-            .scale(-postCollisionVelocityState.y)
-            .add(bParallelVelocity)
+    // Find projections of velocity on normal
+    let aPreCollisionNormalVelocity = collisionNormal
+        .scale(a.vel.dot(collisionNormal))
+    let bPreCollisionAntinormalVelocity = collisionAntinormal
+        .scale(b.vel.dot(collisionAntinormal))
 
-        // Debug collision
-        if (debug) {
-            // Line radius
-            let collisionPlaneLength = 60
-            let radius = 20
-            let linewidth = 1
+    // Get other components of velocity on parallel
+    let aParallelVelocity = a.vel.sub(aPreCollisionNormalVelocity)
+    let bParallelVelocity = b.vel.sub(bPreCollisionAntinormalVelocity)
 
-            // Collision info 
-            let collisionCenter = a.pos.add(b.pos).scale(0.5)
-            let collisionParallel = new Vector(-collisionNormal.y, collisionNormal.x)
+    // Momentum exchange using the khan equation
+    let preCollisionVelocityState = new Vector(
+        aPreCollisionNormalVelocity.magnitude,
+        bPreCollisionAntinormalVelocity.magnitude
+    )
+    let khanMatrix = new Matrix(
+        (a.mass - b.mass), 2 * b.mass,
+        2 * a.mass, (b.mass - a.mass)
+    ).scale(1 / (a.mass + b.mass))
+    let postCollisionVelocityState = khanMatrix
+        .transform(preCollisionVelocityState)
+    let aPostCollisionVelocity = collisionNormal
+        .scale(-postCollisionVelocityState.x)
+        .add(aParallelVelocity)
+    let bPostCollisionVelocity = collisionAntinormal
+        .scale(-postCollisionVelocityState.y)
+        .add(bParallelVelocity)
 
-            // Add gizmos
-            gizmos.push(
-                new LineGizmo(time + 1*SECONDS,
-                    collisionCenter.sub(collisionParallel.scale(collisionPlaneLength/2)),
-                    collisionCenter.add(collisionParallel.scale(collisionPlaneLength/2)),
-                    '#0af', linewidth
-                ),
-                new RayGizmo(time + 1*SECONDS,
-                    collisionCenter, a.vel.scale(-1), radius,
-                    '#0f0', linewidth
-                ),
-                new RayGizmo(time + 1*SECONDS,
-                    collisionCenter, aPostCollisionVelocity, radius,
-                    '#0f0', linewidth
-                ),
-                new RayGizmo(time + 1*SECONDS,
-                    collisionCenter, b.vel.scale(-1), radius,
-                    '#f00', linewidth
-                ),
-                new RayGizmo(time + 1*SECONDS,
-                    collisionCenter, bPostCollisionVelocity, radius,
-                    '#f00', linewidth
-                ),
-            )
+    // Set velocities
+    a.pos = aCorrectedPosition
+    a.vel = aPostCollisionVelocity
+    b.pos = bCorrectedPosition
+    b.vel = bPostCollisionVelocity
+
+    // Return true because the ball collided
+    return {
+        center: a.pos.scale(a.rad).add(b.pos.scale(b.rad)).scale(1 / (a.rad + b.rad)),
+        parallel: collisionParallel,
+        a: {
+            initial: aPreCollisionVelocity.unit,
+            final: aPostCollisionVelocity.unit
+        },
+        b: {
+            initial: bPreCollisionVelocity.unit,
+            final: bPostCollisionVelocity.unit
         }
-
-        // Set velocities
-        a.pos = aCorrectedPosition
-        a.vel = aPostCollisionVelocity
-        b.pos = bCorrectedPosition
-        b.vel = bPostCollisionVelocity
-
-        // Return true because the ball collided
-        return true
     }
-
-    // No ball collision
-    return false
 }

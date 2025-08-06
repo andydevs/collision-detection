@@ -5,6 +5,9 @@
  * Created: 4 - 30 - 2021
  */
 
+
+export const msPerSec = 1000
+
 export class Clock {
     constructor() {
         this.last = null
@@ -20,7 +23,11 @@ export class Clock {
         return this.time - this.last
     }
 
+    get deltaSeconds() {
+        return this.delta / msPerSec
+    }
+
     get framerate() {
-        return Math.floor(1000/this.delta)
+        return Math.floor(1000 / this.delta)
     }
 }

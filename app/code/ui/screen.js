@@ -23,6 +23,25 @@ export class Boundary {
     }
 }
 
+export class Expirable {
+    /**
+     * Construct perishable
+     */
+    constructor(params) {
+        this.frames = params.frames
+        this.drawFunc = params.drawFunc
+    }
+
+    get alive() {
+        return this.frames > 0
+    }
+
+    draw(screen) {
+        this.drawFunc(screen)
+        this.frames--
+    }
+}
+
 /**
  * Render to screen
  */

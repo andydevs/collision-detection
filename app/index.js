@@ -7,7 +7,7 @@
 import './style/main.scss'
 import { Ball } from './code/geometry/ball'
 import Vector, { randomWithBias } from './code/math/vector'
-import { boundaryCollision, ballCollision } from './code/physics/collision'
+import { boundaryCollision, ballCollision, createCollisionExpirable } from './code/physics/collision'
 import Screen from './code/ui/screen'
 import { NoPartitioningStrategy } from './code/physics/partitioning/no-partition'
 import { StaticGridPartitioningStrategy } from './code/physics/partitioning/static-grid'
@@ -19,11 +19,11 @@ import { permutations } from './code/math/array'
 
 // Color palette for balls
 const ballColors = [
-    'cyan', 
-    'lime', 
+    'cyan',
+    'lime',
     'coral',
-    'yellow', 
-    'violet', 
+    'yellow',
+    'violet',
     'white'
 ]
 
@@ -61,11 +61,11 @@ let clock = new Clock()
  * @returns balls and boundaries generated
  */
 function genearateBalls(number, bias) {
-    console.groupCollapsed('genearateBalls')
-    let balls = Array.from({ length: number}, (_,i) => {
+    console.groupCollapsed('genearateBalls(' + number + ', ' + bias + ')')
+    let balls = Array.from({ length: number }, (_, i) => {
         let ball = new Ball(
             Vector.random(-300, 300, -300, 300),
-            Vector.random(-5, 5, -5, 5),
+            Vector.random(-400, 400, -400, 400),
             randomWithBias(5, 30, bias, 0),
             ballColors[i % ballColors.length]
         )
@@ -78,8 +78,8 @@ function genearateBalls(number, bias) {
 
 
 // Initialize game environment stuff
-let gizmos = []
 let balls = []
+let expirables = []
 controls.onGenerate(() => {
     balls = genearateBalls(controls.numberBalls, controls.sizeBias)
 })
@@ -105,38 +105,64 @@ requestAnimationFrame(function loop() {
     clock.tick()
 
     // Physics update step
-    balls.forEach(ball => ball.update())
-    
-    // Boundary collision detection
-    // TODO: Optimize this based on partitioning...
-    permutations(balls, screen.boundaries).forEach(([ball, boundary]) => {
-        boundaryCollision(screen, boundary, ball, clock.time, gizmos, controls.showCollisions)
-    })
+    balls.forEach(ball => ball.update(clock.deltaSeconds))
 
     // Use partition algorithm to get possible collision checks
-    let collisions = partitionControl.strategy.partition(screen, balls)
-    nChecks = collisions.length
+    let collisionChecks = partitionControl.strategy.partition(screen, balls)
+    nChecks = collisionChecks.length
     nChecks += balls.length * screen.boundaries.length
-    
-    // Check collisions
-    collisions.forEach(([a, b]) => {
-        ballCollision(screen, a, b, clock.time, gizmos, controls.showCollisions)
-    })
 
-    // Render step
+    // Boundary collision detection
+    // TODO: Optimize this based on partitioning...
+    let boundaryCollisions = permutations(balls, screen.boundaries)
+        .map(([ball, boundary]) => boundaryCollision(boundary, ball))
+        .filter(col => col !== null && col !== undefined)
+
+    // Check ball-to-ball collisions
+    let ballCollisions = collisionChecks
+        .map(([a, b]) => ballCollision(a, b))
+        .filter(col => col !== null && col !== undefined)
+
+    // Add all collisions to expirables
+    let collisions = [...boundaryCollisions, ...ballCollisions]
+    if (controls.showCollisions && collisions.length > 0) {
+        expirables.push(
+            createCollisionExpirable({
+                collisions,
+                frames: 100,
+                style: {
+                    lineWidth: 3,
+                    length: 20,
+                    color: {
+                        a: 'green',
+                        b: 'red',
+                        parallel: '#0ac'
+                    }
+                }
+            })
+        )
+    }
+
+    // ====== <Render Step> ========
+
     screen.clear()
 
-    // ==> Here if debug partitioning is set, we'll draw partition state
+    // If show Partitions is set, we'll draw partition state
     if (controls.showPartitions) {
         partitionControl.strategy.draw(screen, balls)
-        collisions.forEach(([a, b]) => {
+        collisionChecks.forEach(([a, b]) => {
             screen.drawLine(a.pos, b.pos, '#eee')
         })
     }
 
-    gizmos = gizmos.filter(g => g.stillvalid(clock))
-    gizmos.forEach(gizmo => gizmo.draw(screen))
+    // Draw expirables
+    expirables = expirables.filter(xp => xp.alive)
+    expirables.forEach(xp => xp.draw(screen))
+
+    // Draw balls after partitioning so they're overhead
     balls.forEach(ball => ball.draw(screen))
+
+    // ====== </Render Step> ========
 
     // Reloop
     requestAnimationFrame(loop)

@@ -17,7 +17,7 @@ export class Ball {
      * @param {Vector} vel velocity of vall
      * @param {float} rad radius of ball
      */
-    constructor(pos, vel, rad=20, color='#ffffff') {
+    constructor(pos, vel, rad = 20, color = '#ffffff') {
         this.pos = pos
         this.vel = vel
         this.rad = rad
@@ -53,9 +53,9 @@ export class Ball {
     }
 
     /**
-     * Update position of ball based on velocity
+     * Update position of ball based on velocity and delta
      */
-    update() {
-        this.pos = this.pos.add(this.vel)
+    update(delta) {
+        this.pos = this.pos.add(this.vel.scale(delta))
     }
 }
