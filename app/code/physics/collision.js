@@ -51,7 +51,7 @@ export function createCollisionExpirable(params) {
  * @param {Boundary} boundary boundary being checked
  * @param {Ball} ball ball being checked
  * 
- * @returns Collision information or null
+ * @returns {Collision | null} collision information if collision occurred (else null)
  */
 export function boundaryCollision(boundary, ball) {
     // Distance to boundary
@@ -63,7 +63,7 @@ export function boundaryCollision(boundary, ball) {
     // Correction translation
     let correction = ball.rad - distance
     ball.pos = ball.pos.add(boundary.norm.scale(correction))
-    
+
     // Velocity reflection
     let vInitial = ball.vel
     let vNormal = boundary.norm.scale(vInitial.dot(boundary.norm))
@@ -90,7 +90,7 @@ export function boundaryCollision(boundary, ball) {
  * @param {Ball} a ball A being checked
  * @param {Ball} b ball B being checked
  * 
- * @returns true if collided
+ * @returns {Collision | null} collision information if collision occurred (else null)
  */
 export function ballCollision(a, b) {
     // Difference vector
@@ -105,7 +105,7 @@ export function ballCollision(a, b) {
     let collisionParallel = new Vector(-collisionNormal.y, collisionNormal.x)
 
     // Correction translation
-    let intersectionCorrectionFactor = ((a.rad + b.rad) - vectorDifferenceBetweenBalls.magnitude)/2
+    let intersectionCorrectionFactor = ((a.rad + b.rad) - vectorDifferenceBetweenBalls.magnitude) / 2
     let aCorrectedPosition = a.pos
         .add(collisionAntinormal.scale(intersectionCorrectionFactor))
     let bCorrectedPosition = b.pos
@@ -131,9 +131,9 @@ export function ballCollision(a, b) {
         bPreCollisionAntinormalVelocity.magnitude
     )
     let khanMatrix = new Matrix(
-        (a.mass - b.mass), 2*b.mass,
-        2*a.mass, (b.mass - a.mass)
-    ).scale(1/(a.mass + b.mass))
+        (a.mass - b.mass), 2 * b.mass,
+        2 * a.mass, (b.mass - a.mass)
+    ).scale(1 / (a.mass + b.mass))
     let postCollisionVelocityState = khanMatrix
         .transform(preCollisionVelocityState)
     let aPostCollisionVelocity = collisionNormal
@@ -151,7 +151,7 @@ export function ballCollision(a, b) {
 
     // Return true because the ball collided
     return {
-        center: a.pos.scale(a.rad).add(b.pos.scale(b.rad)).scale(1/(a.rad + b.rad)),
+        center: a.pos.scale(a.rad).add(b.pos.scale(b.rad)).scale(1 / (a.rad + b.rad)),
         parallel: collisionParallel,
         a: {
             initial: aPreCollisionVelocity.unit,
