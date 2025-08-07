@@ -4,24 +4,23 @@
  * Author:  Anshul Kharbanda
  * Created: 4 - 30 - 2021
  */
+import { Observable } from "rxjs";
 
 
-export class Stats {
-    constructor() {
-        this._frameDeltaEntry = document.querySelector('#delta')
-        this._framerateEntry = document.querySelector('#framerate')
-        this._cpsEntry = document.querySelector('#cps')
-    }
-
-    set frameDelta(value) {
-        this._frameDeltaEntry.innerHTML = `${value}ms`
-    }
-
-    set framerate(value) {
-        this._framerateEntry.innerHTML = `${value}`
-    }
-
-    set cps(value) {
-        this._cpsEntry.innerHTML = `${value}`
+/**
+ * Map input stats to display element
+ * 
+ * @param {{ [K in string]: Observable }} mapping object connecting input to element 
+ * 
+ * @returns {() => void} function which unsubscribes from all stats
+ */
+export function hookStats(mapping) {
+    let subscriptions = Object.entries(mapping).map(([id, observable$]) => {
+        return observable$.subscribe((value) => {
+            document.querySelector(id).innerHTML = `${value}`
+        })
+    })
+    return () => {
+        subscriptions.map(s => s.unsubscribe())
     }
 }

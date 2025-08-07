@@ -13,10 +13,11 @@ import { NoPartitioningStrategy } from './code/physics/partitioning/no-partition
 import { StaticGridPartitioningStrategy } from './code/physics/partitioning/static-grid'
 import { DynamicGridPartitioningStrategy } from './code/physics/partitioning/dynamic-grid'
 import { Controls, PartitionControl } from './code/ui/controls'
-import { Stats } from './code/ui/stats'
+import { hookStats } from './code/ui/stats'
 import { Clock } from './code/clock'
 import { permutations } from './code/math/array'
 import { MedianKDTreePartitioningStrategy } from './code/physics/partitioning/median-kd-tree'
+import { BehaviorSubject, distinctUntilChanged, map, pipe, throttleTime } from 'rxjs'
 
 // Color palette for balls
 const ballColors = [
@@ -44,9 +45,6 @@ let partitionControl = new PartitionControl({
     ]
 })
 let controls = new Controls(partitionControl)
-
-// Simulation stats
-let stats = new Stats()
 
 // Simulation screen
 let canvas = document.getElementById('canvas')
@@ -81,23 +79,23 @@ function genearateBalls(number, bias) {
 
 // Initialize game environment stuff
 let balls = []
-let expirables = []
 controls.onGenerate(() => {
     balls = genearateBalls(controls.numberBalls, controls.sizeBias)
 })
 
-// Buffer to hold current collision checks
-let nChecks = 0
+let nChecks$ = new BehaviorSubject(0)
+let deltas$ = map(({ delta }) => `${delta}ms`)(clock.ticks$)
+let framerate$ = map(({ delta }) => Math.round(1000 / delta))(clock.ticks$)
 
-// Update render time on an interval
-setInterval(() => {
-    // Update frame stats
-    stats.frameDelta = clock.delta
-    stats.framerate = clock.framerate
+let statOperator = pipe(
+    throttleTime(1000)
+)
 
-    // Update collision stats
-    stats.cps = nChecks
-}, 1000)
+hookStats({
+    '#cps': statOperator(nChecks$),
+    '#delta': statOperator(deltas$),
+    '#framerate': statOperator(framerate$)
+})
 
 /**
  * Runs each animation loop
@@ -111,12 +109,12 @@ requestAnimationFrame(function loop() {
 
     // Use partition algorithm to get possible collision checks
     let collisionChecks = partitionControl.strategy.partition(screen, balls)
-    nChecks = collisionChecks.length
-    nChecks += balls.length * screen.boundaries.length
+    let boundaryChecks = permutations(balls, screen.boundaries)
+    nChecks$.next(collisionChecks.length + boundaryChecks.length)
 
     // Boundary collision detection
     // TODO: Optimize this based on partitioning...
-    let boundaryCollisions = permutations(balls, screen.boundaries)
+    let boundaryCollisions = boundaryChecks
         .map(([ball, boundary]) => boundaryCollision(boundary, ball))
         .filter(col => col !== null && col !== undefined)
 
@@ -128,7 +126,7 @@ requestAnimationFrame(function loop() {
     // Add all collisions to expirables
     let collisions = [...boundaryCollisions, ...ballCollisions]
     if (controls.showCollisions && collisions.length > 0) {
-        expirables.push(
+        screen.addExpirable(
             createCollisionExpirable({
                 collisions,
                 frames: 100,
@@ -148,6 +146,7 @@ requestAnimationFrame(function loop() {
     // ====== <Render Step> ========
 
     screen.clear()
+    screen.pruneAndDrawExpirables()
 
     // If show Partitions is set, we'll draw partition state
     if (controls.showPartitions) {
@@ -156,10 +155,6 @@ requestAnimationFrame(function loop() {
             screen.drawLine(a.pos, b.pos, '#eee')
         })
     }
-
-    // Draw expirables
-    expirables = expirables.filter(xp => xp.alive)
-    expirables.forEach(xp => xp.draw(screen))
 
     // Draw balls after partitioning so they're overhead
     balls.forEach(ball => ball.draw(screen))
