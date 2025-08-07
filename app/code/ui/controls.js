@@ -48,7 +48,7 @@ export class Controls {
     constructor(partitionControl) {
         this._numberBalls = document.querySelector('#number-balls')
         this._sizeBias = document.querySelector('#size-bias')
-        this._generateButton = document.querySelector('#generate-balls')
+        this._generateButton = document.querySelector('#generate')
         this._collisionCheck = document.querySelector('#show-collision')
         this._partitionCheck = document.querySelector('#show-partitions')
         this._partitionControl = partitionControl

@@ -21,24 +21,20 @@
             </div>
             <div id="controls">
                 <h2>Controls</h2>
-                <div>
-                    <p>
-                        <label># of Balls</label>
-                        <input id="number-balls" type="number" value="10" min="0">
-                    </p>
-                    <p>
-                        <label>Size Bias</label>
-                        <input id="size-bias" type="range" value="0.35" min="0.00" step="0.05" max="1.0">
-                    </p>
-                    <button id="generate-balls">Generate</button>
+                <div id="simulation-params">
+                    <label id="number-balls-label">Particles</label>
+                    <input id="number-balls" type="number" value="10" min="0">
+                    <label id="size-bias-label">Size Bias</label>
+                    <input id="size-bias" type="range" value="0.35" min="0.00" step="0.05" max="1.0">
+                    <button id="generate">Generate</button>
                 </div>
                 <div>
-                    <p>
-                        <label>Show/Hide Collisions</label>
+                    <p class="checkbox-control">
+                        <label>Show Collisions</label>
                         <input type="checkbox" id="show-collision"><br>
                     </p>
-                    <p>
-                        <label>Show/Hide Partitioning Info</label>
+                    <p class="checkbox-control">
+                        <label>Show Partitioning Info</label>
                         <input type="checkbox" id="show-partitions"><br>
                     </p>
                 </div>
@@ -48,7 +44,7 @@
                 </p>
             </div>
         </div>
-        <div>
+        <div id="footer">
             <p>
                 Thanks to
                 <a
