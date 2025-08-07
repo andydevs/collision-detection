@@ -79,7 +79,6 @@ function genearateBalls(number, bias) {
 
 // Initialize game environment stuff
 let balls = []
-let expirables = []
 controls.onGenerate(() => {
     balls = genearateBalls(controls.numberBalls, controls.sizeBias)
 })
@@ -127,7 +126,7 @@ requestAnimationFrame(function loop() {
     // Add all collisions to expirables
     let collisions = [...boundaryCollisions, ...ballCollisions]
     if (controls.showCollisions && collisions.length > 0) {
-        expirables.push(
+        screen.addExpirable(
             createCollisionExpirable({
                 collisions,
                 frames: 100,
@@ -147,6 +146,7 @@ requestAnimationFrame(function loop() {
     // ====== <Render Step> ========
 
     screen.clear()
+    screen.pruneAndDrawExpirables()
 
     // If show Partitions is set, we'll draw partition state
     if (controls.showPartitions) {
@@ -155,10 +155,6 @@ requestAnimationFrame(function loop() {
             screen.drawLine(a.pos, b.pos, '#eee')
         })
     }
-
-    // Draw expirables
-    expirables = expirables.filter(xp => xp.alive)
-    expirables.forEach(xp => xp.draw(screen))
 
     // Draw balls after partitioning so they're overhead
     balls.forEach(ball => ball.draw(screen))

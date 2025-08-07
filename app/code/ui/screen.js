@@ -48,14 +48,19 @@ export class Expirable {
 export default class Screen {
     constructor(ctx) {
         this.ctx = ctx
+        this.expirables = []
+    }
+
+    addExpirable(expr) {
+        this.expirables.push(expr)
     }
 
     get X() {
-        return this.ctx.canvas.width/2
+        return this.ctx.canvas.width / 2
     }
 
     get Y() {
-        return this.ctx.canvas.height/2
+        return this.ctx.canvas.height / 2
     }
 
     get W() {
@@ -93,7 +98,7 @@ export default class Screen {
             this.ctx.canvas.height)
     }
 
-    drawLine(p0, p1, color, width=1) {
+    drawLine(p0, p1, color, width = 1) {
         let t0 = this.centered(p0)
         let t1 = this.centered(p1)
         this.ctx.strokeStyle = color
@@ -101,24 +106,24 @@ export default class Screen {
         this.ctx.beginPath()
         this.ctx.moveTo(t0.x, t0.y)
         this.ctx.lineTo(t1.x, t1.y)
-        this.ctx.stroke()    
+        this.ctx.stroke()
     }
 
-    drawRay(p, d, l, color, width=1) {
+    drawRay(p, d, l, color, width = 1) {
         let s = p.add(d.scale(l))
         this.drawLine(p, s, color, width)
     }
 
-    drawCircle(pos, rad, color='#000000') {
+    drawCircle(pos, rad, color = '#000000') {
         let trfp = this.centered(pos)
         this.ctx.fillStyle = color
         this.ctx.lineWidth = 1
         this.ctx.beginPath()
-        this.ctx.arc(trfp.x, trfp.y, rad, 0, 2*Math.PI)
+        this.ctx.arc(trfp.x, trfp.y, rad, 0, 2 * Math.PI)
         this.ctx.fill()
     }
 
-    drawRect(rect, color='#aaaaaa') {
+    drawRect(rect, color = '#aaaaaa') {
         let c1 = this.centered(rect.pos0)
         let c2 = this.centered(rect.pos1)
         this.ctx.strokeStyle = color
@@ -126,5 +131,10 @@ export default class Screen {
         this.ctx.beginPath()
         this.ctx.rect(c1.x, c1.y, c2.x - c1.x, c2.y - c1.y)
         this.ctx.stroke()
+    }
+
+    pruneAndDrawExpirables() {
+        this.expirables = this.expirables.filter(xp => xp.alive)
+        this.expirables.forEach(xp => xp.draw(this))
     }
 }
