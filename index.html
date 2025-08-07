@@ -1,10 +1,14 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><%= htmlWebpackPlugin.options.title %></title>
+    <title>
+        <%= htmlWebpackPlugin.options.title %>
+    </title>
 </head>
+
 <body>
     <div id="app">
         <div id="grid">
@@ -24,7 +28,7 @@
                     </p>
                     <p>
                         <label>Size Bias</label>
-                        <input id="size-bias" type="number" value="0.35" min="0.01" max="1.0">
+                        <input id="size-bias" type="range" value="0.35" min="0.00" step="0.05" max="1.0">
                     </p>
                     <button id="generate-balls">Generate</button>
                 </div>
@@ -46,12 +50,14 @@
         </div>
         <div>
             <p>
-                Thanks to 
-                <a href="https://www.khanacademy.org/science/physics/linear-momentum/elastic-and-inelastic-collisions/a/what-are-elastic-and-inelastic-collisions">
-                Khanacademy</a>
+                Thanks to
+                <a
+                    href="https://www.khanacademy.org/science/physics/linear-momentum/elastic-and-inelastic-collisions/a/what-are-elastic-and-inelastic-collisions">
+                    Khanacademy</a>
                 for the momentum equation
             </p>
         </div>
     </div>
 </body>
+
 </html>
