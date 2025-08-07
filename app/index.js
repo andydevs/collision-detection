@@ -16,6 +16,7 @@ import { Controls, PartitionControl } from './code/ui/controls'
 import { Stats } from './code/ui/stats'
 import { Clock } from './code/clock'
 import { permutations } from './code/math/array'
+import { MedianKDTreePartitioningStrategy } from './code/physics/partitioning/median-kd-tree'
 
 // Color palette for balls
 const ballColors = [
@@ -38,7 +39,8 @@ let partitionControl = new PartitionControl({
         new StaticGridPartitioningStrategy({ rows: 3, cols: 5 }),
         new StaticGridPartitioningStrategy({ rows: 6, cols: 10 }),
         new DynamicGridPartitioningStrategy({ rows: 2, cols: 2 }),
-        new DynamicGridPartitioningStrategy({ rows: 2, cols: 3 })
+        new DynamicGridPartitioningStrategy({ rows: 2, cols: 3 }),
+        new MedianKDTreePartitioningStrategy()
     ]
 })
 let controls = new Controls(partitionControl)
