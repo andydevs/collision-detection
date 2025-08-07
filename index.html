@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>
+        Collision Detection
+    </title>
+<script defer src="bundle.js"></script></head>
+
+<body>
+    <div id="app">
+        <div id="grid">
+            <canvas id="canvas" width="1280" height="720"></canvas>
+            <div id="stats">
+                <h2>Stats</h2>
+                <p>Time Per Frame: <span id="delta">0ms</span></p>
+                <p>Approx. frame rate: <span id="framerate">0</span></p>
+                <p>Collision checks per frame: <span id="cps">0</span></p>
+            </div>
+            <div id="controls">
+                <h2>Controls</h2>
+                <div id="simulation-params">
+                    <label id="number-balls-label">Particles</label>
+                    <input id="number-balls" type="number" value="10" min="0">
+                    <label id="size-bias-label">Size Bias</label>
+                    <input id="size-bias" type="range" value="0.35" min="0.00" step="0.05" max="1.0">
+                    <button id="generate">Generate</button>
+                </div>
+                <div>
+                    <p class="checkbox-control">
+                        <label>Show Collisions</label>
+                        <input type="checkbox" id="show-collision"><br>
+                    </p>
+                    <p class="checkbox-control">
+                        <label>Show Partitioning Info</label>
+                        <input type="checkbox" id="show-partitions"><br>
+                    </p>
+                </div>
+                <p>
+                    <label>Partition Type</label>
+                    <select id="partition-type"></select>
+                </p>
+            </div>
+        </div>
+        <div id="footer">
+            <p>
+                Thanks to
+                <a
+                    href="https://www.khanacademy.org/science/physics/linear-momentum/elastic-and-inelastic-collisions/a/what-are-elastic-and-inelastic-collisions">
+                    Khanacademy</a>
+                for the momentum equation
+            </p>
+        </div>
+    </div>
+</body>
+
+</html>
